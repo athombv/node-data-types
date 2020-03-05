@@ -4,7 +4,8 @@
   "description": "Binary Data Parsers",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node ./test/Struct.js",
+    "lint": "eslint ."
   },
   "repository": {
     "type": "git",
@@ -16,9 +17,8 @@
     "url": "https://github.com/athombv/node-data-types/issues"
   },
   "homepage": "https://github.com/athombv/node-data-types#readme",
-  "config": {
-    "npmPublishTagProduction": "latest",
-    "npmPublishTagTesting": "beta",
-    "nodeVersion": "8"
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-athom": "^2.0.8"
   }
 }
