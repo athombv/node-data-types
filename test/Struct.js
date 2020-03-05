@@ -41,5 +41,3 @@ assert.deepEqual(refData.field5.toArray(), ['bit2']);
 assert(refData.field6.bit2);
 assert(refData.field6.bit9);
 assert.deepEqual(refData.field6.toArray(), ['bit2', 'bit9']);
-
-console.log('OK!');
