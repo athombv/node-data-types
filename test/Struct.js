@@ -13,6 +13,7 @@ const TestStruct = Struct('TestStruct', {
   }),
   field4: DataTypes.Array8(DataTypes.uint16),
   field5: DataTypes.map8('bit1', 'bit2', 'bit3'),
+  field6: DataTypes.map16('bit1','bit2','bit3','bit4','bit5','bit6','bit7','bit8','bit9')
 });
 
 const testData = {
@@ -21,12 +22,13 @@ const testData = {
   field3: 'opt3',
   field4: [1,2,3,4],
   field5: ['bit2'],
+  field6: ['bit2', 'bit9'],
 };
 
 const data = new TestStruct(testData);
 
 const dataBuf = data.toBuffer();
-assert(dataBuf.equals(Buffer.from('0474657374f4010304010002000300040002','hex')));
+assert(dataBuf.equals(Buffer.from('0474657374f40103040100020003000400020201','hex')));
 
 const refData = TestStruct.fromBuffer(dataBuf);
 
@@ -36,5 +38,8 @@ assert.equal(refData.field3, testData.field3);
 assert.deepEqual(refData.field4, testData.field4);
 assert(refData.field5.bit2);
 assert.deepEqual(refData.field5.toArray(), ['bit2']);
+assert(refData.field6.bit2);
+assert(refData.field6.bit9);
+assert.deepEqual(refData.field6.toArray(), ['bit2', 'bit9']);
 
 console.log('OK!');
