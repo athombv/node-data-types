@@ -3,6 +3,10 @@
   "version": "1.0.7",
   "description": "Binary Data Parsers",
   "main": "index.js",
+  "files": [
+    "/lib",
+    "/index.js"
+  ],
   "scripts": {
     "test": "node ./test/Struct.js",
     "lint": "eslint .",

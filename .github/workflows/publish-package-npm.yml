@@ -1,6 +1,6 @@
 name: Publish to NPM
 
-# Version: 2.0.1
+# Version: 2.0.2
 # Modified: No
 # Requirements:
 # - Ensure you've run `npm version major|minor|patch` on the `master` branch before merging to `production`.
@@ -40,19 +40,19 @@ jobs:
       - name: Get Package Info
         run: |
           NAME="$(node -p "require('./package.json').name")"
-          echo package_name=${NAME} >> $GITHUB_ENV     
+          echo package_name=${NAME} >> $GITHUB_ENV
 
-          VERSION="$(node -p "require('./package.json').version")"     
+          VERSION="$(node -p "require('./package.json').version")"
           echo package_version=${VERSION} >> $GITHUB_ENV
 
       # Ensure `packake.json .files` exists.
       - name: Verify
         run: |
           if ! cat package.json | jq -e .files; then
-            echo "Missing `files` array in package.json."
+            echo "Missing 'files' array in package.json."
             exit 1
           fi
-          
+
 
       # Run `npm ci && npm run build` if it exists.
       - name: Build
