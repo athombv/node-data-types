@@ -7,6 +7,9 @@
     "/lib",
     "/index.js"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "test": "node ./test/Struct.js",
     "lint": "eslint .",
