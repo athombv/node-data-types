@@ -1,6 +1,6 @@
 name: Publish to NPM
 
-# Version: 2.0.2
+# Version: 2.0.3
 # Modified: No
 # Requirements:
 # - Ensure you've run `npm version major|minor|patch` on the `master` branch before merging to `production`.
