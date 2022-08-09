@@ -71,6 +71,7 @@ jobs:
       - name: Configure NPM
         run: |
           npm config set registry https://registry.npmjs.org
+          npm config set @athombv:registry https://registry.npmjs.org
           npm config set //registry.npmjs.org/:_authToken=${{ secrets.NPM_AUTH_TOKEN }} -q
 
       # Publish when this action is running on branch production.
