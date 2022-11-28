@@ -140,4 +140,5 @@ const ZdoEndDeviceAnnounceBuffer = ZdoEndDeviceAnnounceIndicationStruct.toBuffer
 
 Known limitations:
 - Structs in Structs are considered a no-go by these definitions.
+- DataTypes have no related JS type, so a few unknowns are used.
 */
