@@ -1,11 +1,11 @@
-interface StructInstance<T> {
-  fromBuffer: (buffer: Buffer) => T; // Object
-  toBuffer: (object: T, index?: number) => Buffer; // Object
+interface StructInstance<StructType> {
+  fromBuffer: (buffer: Buffer) => StructType;
+  toBuffer: (object: StructType, index?: number) => Buffer;
 }
 
 declare module "@athombv/data-types" {
   const DataTypes: any;
-  const Struct: <Type>(name: string, objectDefinition: Type) => StructInstance<Type>;
+  const Struct: <StructType>(name: string, objectDefinition: StructType) => StructInstance<StructType>;
 
   export { DataTypes, Struct };
 }
