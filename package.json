@@ -1,6 +1,6 @@
 {
   "name": "@athombv/data-types",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Binary Data Parsers",
   "main": "index.js",
   "types": "index.d.ts",
@@ -13,7 +13,7 @@
     "access": "public"
   },
   "scripts": {
-    "test": "node ./test/Struct.js",
+    "test": "node ./test/index.js",
     "lint": "eslint ."
   },
   "repository": {
