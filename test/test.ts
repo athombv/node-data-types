@@ -6,10 +6,16 @@ const debug = Debug("data-type");
 import { DataTypes } from "../lib_ts/DataTypes";
 import { Struct, StructClass } from "../lib_ts/Struct";
 
-debug("booleanDataType from buffer", DataTypes.bool.fromBuffer(Buffer.from([1]), 0));
-debug("booleanDataType to buffer", DataTypes.bool.toBuffer(Buffer.from([0]), true, 0));
-debug("uint8DataType from buffer", DataTypes.uint8.fromBuffer(Buffer.from([12]), 0));
-debug("uint8DataType to buffer", DataTypes.uint8.toBuffer(Buffer.from([0]), 12, 0));
+assert.strictEqual(DataTypes.bool.fromBuffer(Buffer.from([1]), 0), true);
+assert.deepEqual(DataTypes.bool.toBuffer(Buffer.from([0]), true, 0), Buffer.from([1]));
+
+assert.strictEqual(DataTypes.uint8.fromBuffer(Buffer.from([12]), 0), 12);
+assert.deepEqual(DataTypes.uint8.toBuffer(Buffer.from([0]), 12, 0), Buffer.from([12]));
+
+// debug("booleanDataType from buffer", DataTypes.bool.fromBuffer(Buffer.from([1]), 0));
+// debug("booleanDataType to buffer", DataTypes.bool.toBuffer(Buffer.from([0]), true, 0));
+// debug("uint8DataType from buffer", DataTypes.uint8.fromBuffer(Buffer.from([12]), 0));
+// debug("uint8DataType to buffer", DataTypes.uint8.toBuffer(Buffer.from([0]), 12, 0));
 
 const structDefinition = {
   booleanProp: DataTypes.bool,
