@@ -20,15 +20,20 @@ assert.deepEqual(DataTypes.uint8.toBuffer(Buffer.from([0]), 12, 0), Buffer.from(
 const structDefinition = {
   booleanProp: DataTypes.bool,
   uint8Prop: DataTypes.uint8,
+  uint16Prop: DataTypes.uint16,
+  data8Prop: DataTypes.data8,
 };
 
 const structObject = {
   booleanProp: true,
   uint8Prop: 123,
+  uint16Prop: 30000,
+  data8Prop: 8,
 };
 
+const emptyBuffer = () => Buffer.alloc(5);
 const structClass = new StructClass<typeof structDefinition>(structDefinition);
-const structClassToBuffer = structClass.toBuffer(Buffer.from([0, 0]), structObject);
+const structClassToBuffer = structClass.toBuffer(emptyBuffer(), structObject);
 debug("structClassToBuffer", structClassToBuffer);
 const structClassFromBuffer = structClass.fromBuffer(structClassToBuffer);
 debug("structClassFromBuffer", structClassFromBuffer);
@@ -37,7 +42,7 @@ assert.deepEqual(structClassFromBuffer, structObject);
 // structClassFromBuffer.uint8Prop.trim();
 
 const structFn = Struct<typeof structDefinition>("dummyStruct", structDefinition);
-const structFnToBuffer = structFn.toBuffer(Buffer.from([0, 0]), structObject);
+const structFnToBuffer = structFn.toBuffer(emptyBuffer(), structObject);
 debug("structFnToBuffer", structFnToBuffer);
 const structFnFromBuffer = structFn.fromBuffer(structFnToBuffer);
 debug("structFnFromBuffer", structFnFromBuffer);
