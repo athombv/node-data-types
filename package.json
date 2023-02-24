@@ -13,7 +13,7 @@
     "access": "public"
   },
   "scripts": {
-    "test": "node ./test/Struct.js",
+    "test": "node ./test/index.js",
     "lint": "eslint ."
   },
   "repository": {
