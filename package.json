@@ -13,7 +13,8 @@
     "access": "public"
   },
   "scripts": {
-    "test": "mocha --extension test.js test",
+    "build": "tsc --build --clean && tsc",
+    "test": "mocha --require source-map-support/register --extension test.js dist/test",
     "lint": "eslint ."
   },
   "engines": {
@@ -32,9 +33,14 @@
   "devDependencies": {
     "@tsconfig/node16": "^1.0.3",
     "@types/debug": "^4.1.7",
+    "@types/mocha": "^10.0.1",
     "@types/node": "^18.11.9",
     "eslint": "^6.8.0",
     "eslint-config-athom": "^2.0.8",
-    "mocha": "^10.2.0"
+    "mocha": "^10.2.0",
+    "prettier": "^2.8.4"
+  },
+  "dependencies": {
+    "source-map-support": "^0.5.21"
   }
 }
