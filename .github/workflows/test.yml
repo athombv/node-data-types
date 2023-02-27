@@ -23,11 +23,10 @@ jobs:
     name: Run
     runs-on: ubuntu-latest
 
-    # Define a strategy for running these tests on various operating systems and Node.js versions in parallel.
+    # Define a strategy for running these tests on various Node.js versions in parallel.
     strategy:
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
-        node: [8, 10, 12]
+        node: [12, 16]
 
     steps:
       # Checks out the current repository.

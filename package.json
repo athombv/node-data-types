@@ -13,7 +13,7 @@
     "access": "public"
   },
   "scripts": {
-    "test": "node ./test/index.js",
+    "test": "mocha --extension test.js test",
     "lint": "eslint ."
   },
   "repository": {
@@ -29,6 +29,7 @@
   "devDependencies": {
     "@types/node": "^18.11.9",
     "eslint": "^6.8.0",
-    "eslint-config-athom": "^2.0.8"
+    "eslint-config-athom": "^2.0.8",
+    "mocha": "^10.2.0"
   }
 }
