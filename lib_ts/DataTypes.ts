@@ -164,17 +164,29 @@ function enumFromBuf(this: HasLength & HasArgs, buffer: Buffer, index: number): 
 }
 
 export const DataTypes = {
+  // TODO: noData
+  //
+  data8: new DataType<number>(8, 'data8', 1, uintToBufBE, uintFromBufBE, 0),
+  // TODO: data16
+  // TODO: data24
+  // TODO: data32
+  // TODO: difference with data8 which returns a number?
+  data40: new DataType<Buffer>(12, 'data40', 5, dataToBuf, dataFromBuf, Buffer.alloc(0)),
+  // TODO: data48
+  // TODO: data56
+  // TODO: data64
   // TODO: why should this return null
   bool: new DataType<boolean | null>(16, 'bool', 1, boolToBuf, boolFromBuf, false),
   //
-  data8: new DataType<number>(8, 'data8', 1, uintToBufBE, uintFromBufBE, 0),
-  //
-  // TODO: difference with data8 which returns a number?
-  data40: new DataType<Buffer>(12, 'data40', 5, dataToBuf, dataFromBuf, Buffer.alloc(0)),
-  //
   map8: (...args: string[]) =>
     new DataType<Bitmap>(24, 'map8', 1, bitmapToBuf, bitmapFromBuf, new Bitmap(0, []), ...args),
-  //
+  // TODO: map16
+  // TODO: map24
+  // TODO: map32
+  // TODO: map40
+  // TODO: map48
+  // TODO: map56
+  // TODO: map64
   uint8: new DataType<number>(32, 'uint8', 1, uintToBuf, uintFromBuf, 0),
   uint16: new DataType<number>(33, 'uint16', 2, uintToBuf, uintFromBuf, 0),
   uint24: new DataType<number>(34, 'uint24', 3, uintToBuf, uintFromBuf, 0),
@@ -199,4 +211,25 @@ export const DataTypes = {
       undefined,
       enumDefinition
     )
+  // TODO: enum16
+  // TODO: enum32
+
+  // TODO: single
+  // TODO: double
+  // TODO: ocstr
+  // TODO: string
+  // TODO: EUI48
+  // TODO: EUI64
+  // TODO: key128
+
+  // TODO: uint4
+  // TODO: enum4
+  // TODO: map4
+
+  // TODO: buffer
+  // TODO: buffer8
+  // TODO: buffer16
+  // TODO: Array0
+  // TODO: Array8
+  // TODO: FixedString
 };
