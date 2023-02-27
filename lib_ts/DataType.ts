@@ -16,7 +16,7 @@ export class DataType<T> {
     /**
      * Returns offset + number of bytes written.
      */
-    public toBuffer: (buffer: Buffer, value: unknown, i: number) => number,
+    public toBuffer: (buffer: Buffer, value: unknown, index: number) => number,
     /**
      * Returns value with type T.
      */
