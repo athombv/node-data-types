@@ -19,7 +19,7 @@ const structObject = {
 
 const structBuffer = Buffer.from([0x01, 0x7b, 0x30, 0x75, 0x08]);
 
-describe('Struct class', function () {
+describe('Struct class (new)', function () {
   it('should parse test data to buffer', function () {
     const emptyBuffer = () => Buffer.alloc(5);
     const structClass = new StructClass<typeof structDefinition>(structDefinition);
@@ -33,7 +33,7 @@ describe('Struct class', function () {
   });
 });
 
-describe('Struct factory', function () {
+describe('Struct factory (new)', function () {
   it('should parse test data to buffer', function () {
     const emptyBuffer = () => Buffer.alloc(5);
     const structFn = Struct<typeof structDefinition>('dummyStruct', structDefinition);

@@ -1,7 +1,20 @@
 import { DataType } from './DataType';
+import { Bitmap } from './Bitmap';
 
 interface HasLength {
   length: number;
+}
+interface HasArgs {
+  args: unknown[];
+}
+
+/**
+ * Type guard for array of strings.
+ */
+function isStringArray(value: unknown): value is string[] {
+  if (!Array.isArray(value)) return false;
+  if (value.some((i) => typeof i !== 'string')) return false;
+  return true;
 }
 
 function dataToBuf(this: HasLength, buffer: Buffer, value: unknown, index: number): number {
@@ -18,7 +31,7 @@ function dataFromBuf(
   returnLength?: boolean
 ): Buffer {
   if (!Buffer.isBuffer(buffer)) throw new TypeError('Expected buffer');
-  return buffer.slice(index, index + this.length);
+  return buffer.subarray(index, index + this.length);
 }
 
 function boolToBuf(this: HasLength, buffer: Buffer, value: unknown, index: number): number {
@@ -91,12 +104,35 @@ function uintFromBufBE(
   return buffer.readUIntBE(index, this.length);
 }
 
+function bitmapToBuf(
+  this: HasLength & HasArgs,
+  buffer: Buffer,
+  value: unknown,
+  index: number
+): number {
+  if (!isStringArray(this.args)) throw new Error('Expected array of strings');
+  if (typeof value === 'number' || isStringArray(value) || value instanceof Bitmap) {
+    return Bitmap.toBuffer(buffer, index, this.length, this.args, value);
+  }
+  throw new Error('Expected number, array of strings or Bitmap');
+}
+
+function bitmapFromBuf(this: HasLength & HasArgs, buffer: Buffer, index: number): Bitmap {
+  if (!isStringArray(this.args)) throw new Error('Expected array of strings');
+  return Bitmap.fromBuffer(buffer, index, this.length, this.args);
+}
+
 export const DataTypes = {
-  bool: new DataType<boolean>(16, 'bool', 1, boolToBuf, boolFromBuf, false),
+  // TODO: why should this return null
+  bool: new DataType<boolean | null>(16, 'bool', 1, boolToBuf, boolFromBuf, false),
   //
   data8: new DataType<number>(8, 'data8', 1, uintToBufBE, uintFromBufBE, 0),
   //
-  data40: new DataType<number>(12, 'data40', 5, dataToBuf, dataFromBuf, 0),
+  // TODO: difference with data8 which returns a number?
+  data40: new DataType<Buffer>(12, 'data40', 5, dataToBuf, dataFromBuf, Buffer.alloc(0)),
+  //
+  map8: (...args: string[]) =>
+    new DataType<Bitmap>(24, 'map8', 1, bitmapToBuf, bitmapFromBuf, new Bitmap(0, []), ...args),
   //
   uint8: new DataType<number>(32, 'uint8', 1, uintToBuf, uintFromBuf, 0),
   uint16: new DataType<number>(33, 'uint16', 2, uintToBuf, uintFromBuf, 0),
