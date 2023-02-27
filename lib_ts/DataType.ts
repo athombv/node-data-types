@@ -1,5 +1,5 @@
 export class DataType<T> {
-  args; // TODO: args (?)
+  args: unknown[];
 
   /**
    * @param {number} id
@@ -13,16 +13,18 @@ export class DataType<T> {
     public id: number,
     public shortName: string,
     public length: number,
-    public toBuffer: (buffer: Buffer, value: unknown, i: number) => Buffer,
+    /**
+     * Returns offset + number of bytes written.
+     */
+    public toBuffer: (buffer: Buffer, value: unknown, i: number) => number,
+    /**
+     * Returns value with type T.
+     */
     public fromBuffer: (buffer: Buffer, i: number, returnLength?: boolean) => unknown,
     public defaultValue: T,
     ...args: any[]
   ) {
-    // TODO: args (?)
     this.args = args;
-
-    // TODO: moved default value to constructor, more explicit and required for proper typing
-    // this.defaultValue = this.fromBuffer(Buffer.alloc(Math.ceil(Math.abs(this.length))), 0, false);
   }
 
   get isAnalog() {
@@ -53,7 +55,7 @@ export class DataType<T> {
     return this.shortName;
   }
 
-  [Symbol.for("nodejs.util.inspect.custom")]() {
+  [Symbol.for('nodejs.util.inspect.custom')]() {
     return this.shortName;
   }
 }
