@@ -8,6 +8,8 @@ interface HasArgs {
   args: unknown[];
 }
 
+type EnumDefinition = Record<string, number>;
+
 /**
  * Type guard for array of strings.
  */
@@ -15,6 +17,18 @@ function isStringArray(value: unknown): value is string[] {
   if (!Array.isArray(value)) return false;
   if (value.some((i) => typeof i !== 'string')) return false;
   return true;
+}
+
+/**
+ * Type guard for object with only number values.
+ */
+function isObjectWithNumberValues(input: unknown): input is Record<string, number> {
+  return (
+    typeof input === 'object' &&
+    input !== null &&
+    !Array.isArray(input) &&
+    Object.values(input).every((i) => typeof i === 'number')
+  );
 }
 
 function dataToBuf(this: HasLength, buffer: Buffer, value: unknown, index: number): number {
@@ -110,16 +124,43 @@ function bitmapToBuf(
   value: unknown,
   index: number
 ): number {
-  if (!isStringArray(this.args)) throw new Error('Expected array of strings');
+  if (!isStringArray(this.args)) throw new TypeError('Expected array of strings');
   if (typeof value === 'number' || isStringArray(value) || value instanceof Bitmap) {
     return Bitmap.toBuffer(buffer, index, this.length, this.args, value);
   }
-  throw new Error('Expected number, array of strings or Bitmap');
+  throw new TypeError('Expected number, array of strings or Bitmap');
 }
 
 function bitmapFromBuf(this: HasLength & HasArgs, buffer: Buffer, index: number): Bitmap {
-  if (!isStringArray(this.args)) throw new Error('Expected array of strings');
+  if (!isStringArray(this.args)) throw new TypeError('Expected array of strings');
   return Bitmap.fromBuffer(buffer, index, this.length, this.args);
+}
+
+function enumToBuf(
+  this: HasLength & HasArgs,
+  buffer: Buffer,
+  value: unknown,
+  index: number
+): number {
+  if (typeof value === 'string' && isObjectWithNumberValues(this.args[0])) {
+    value = this.args[0][value];
+  }
+  if (typeof value === 'undefined') throw new TypeError('Unknown enum value');
+  return uintToBuf.call(this, buffer, value, index);
+}
+
+function enumFromBuf(this: HasLength & HasArgs, buffer: Buffer, index: number): string | undefined {
+  const val = uintFromBuf.call(this, buffer, index);
+  if (!isObjectWithNumberValues(this.args[0])) {
+    throw new TypeError('Expected object with only number values');
+  }
+  return Object.keys(this.args[0]).find((key) => {
+    // TypeScripts wants us to check again
+    if (!isObjectWithNumberValues(this.args[0])) {
+      throw new TypeError('Expected object with only number values');
+    }
+    return this.args[0] && this.args[0][key] === val;
+  });
 }
 
 export const DataTypes = {
@@ -146,5 +187,16 @@ export const DataTypes = {
   int24: new DataType<number>(42, 'int24', 3, intToBuf, intFromBuf, 0),
   int32: new DataType<number>(43, 'int32', 4, intToBuf, intFromBuf, 0),
   int40: new DataType<number>(44, 'int40', 5, intToBuf, intFromBuf, 0),
-  int48: new DataType<number>(45, 'int48', 6, intToBuf, intFromBuf, 0)
+  int48: new DataType<number>(45, 'int48', 6, intToBuf, intFromBuf, 0),
+  //
+  enum8: (enumDefinition: EnumDefinition) =>
+    new DataType<string | undefined>(
+      48,
+      'enum8',
+      1,
+      enumToBuf,
+      enumFromBuf,
+      undefined,
+      enumDefinition
+    )
 };

@@ -1,5 +1,6 @@
 import { strict as assert } from 'assert';
 
+import { DataType } from '../lib_ts/DataType';
 import { DataTypes } from '../lib_ts/DataTypes';
 import { Bitmap } from '../lib_ts/Bitmap';
 
@@ -49,4 +50,25 @@ describe('DataTypes (new)', function () {
       assert.deepEqual(buffer, expectedBuffer);
     });
   });
+  describe('enum8', function () {
+    let TestEnum: DataType<string | undefined>;
+
+    beforeEach(function () {
+      TestEnum = DataTypes.enum8({
+        VALUE_A: 0x1,
+        VALUE_B: 0x2
+      });
+    });
+
+    it('should parse to buffer', function () {
+      const buffer = Buffer.from([0]);
+      TestEnum.toBuffer(buffer, 'VALUE_A', 0);
+      assert.deepEqual(buffer, Buffer.from([0x1]));
+    });
+    it('should parse from buffer', function () {
+      const buffer = Buffer.from([0x2]);
+      assert.strictEqual(TestEnum.fromBuffer(buffer, 0), 'VALUE_B');
+    });
+  });
 });
+
