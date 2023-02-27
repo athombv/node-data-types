@@ -1,6 +1,6 @@
 'use strict';
 
-const assert = require('assert');
+const assert = require('assert').strict;
 const { DataTypes, Struct } = require('..');
 
 const TestStruct = Struct('TestStruct', {

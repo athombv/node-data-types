@@ -1,6 +1,6 @@
 'use strict';
 
-const assert = require('assert');
+const assert = require('assert').strict;
 const { DataTypes } = require('..');
 
 const bits = ['bit1', 'bit2', 'bit3', 'bit4'];
