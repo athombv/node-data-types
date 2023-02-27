@@ -20,7 +20,7 @@ export class DataType<T> {
     /**
      * Returns value with type T.
      */
-    public fromBuffer: (buffer: Buffer, i: number, returnLength?: boolean) => unknown,
+    public fromBuffer: (buffer: Buffer, index: number, returnLength?: boolean) => T,
     public defaultValue: T,
     ...args: any[]
   ) {
