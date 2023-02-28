@@ -53,8 +53,8 @@ describe('StructClass', function () {
   it('should parse test data from buffer', function () {
     const structClass = new StructClass<typeof structDefinitionOne>(structDefinitionOne);
     const structClassFromBuffer = structClass.fromBuffer(structBufferOne);
-    assert.deepEqual(structClassFromBuffer, structObjectOne);
     // structClassFromBuffer.booleanProp.trim();
+    assert.deepEqual(structClassFromBuffer, structObjectOne);
   });
 });
 
@@ -62,15 +62,16 @@ describe('Struct()', function () {
   describe('static', function () {
     it('should parse test data to buffer', function () {
       const emptyBuffer = () => Buffer.alloc(5);
-      const structFn = Struct<typeof structDefinitionOne>('dummyStruct', structDefinitionOne);
+      const structFn = Struct('dummyStruct', structDefinitionOne);
       const structFnToBuffer = structFn.toBuffer(emptyBuffer(), structObjectOne, 0);
       assert.deepEqual(structFnToBuffer, structBufferOne);
     });
     it('should parse test data from buffer', function () {
-      const structFn = Struct<typeof structDefinitionOne>('dummyStruct', structDefinitionOne);
-      const structFnFromBuffer = structFn.fromBuffer(structBufferOne);
-      assert.deepEqual(structFnFromBuffer, structObjectOne);
+      const structFn = Struct('dummyStruct', structDefinitionOne);
+      const structFnFromBuffer = structFn.fromBuffer<typeof structDefinitionOne>(structBufferOne);
       // structFnFromBuffer.booleanProp.trim();
+      // structFnFromBuffer.bla;
+      assert.deepEqual(structFnFromBuffer, structObjectOne);
     });
   });
 
@@ -79,17 +80,19 @@ describe('Struct()', function () {
       let data;
       let dataBuf: Buffer;
       it('should parse test data to buffer', function () {
-        const TestStruct = Struct<typeof structDefinitionOne>('TestStruct', structDefinitionOne);
-        data = new TestStruct<typeof structDefinitionOne>(structObjectOne);
+        const TestStruct = Struct('TestStruct', structDefinitionOne);
+        data = new TestStruct(structObjectOne);
         dataBuf = data.toBuffer();
         assert(dataBuf.equals(Buffer.from('017b307508', 'hex')));
       });
       it('should parse test data from buffer', function () {
-        const TestStruct = Struct<typeof structDefinitionOne>('TestStruct', structDefinitionOne);
-        data = new TestStruct<typeof structDefinitionOne>(structObjectOne);
+        const TestStruct = Struct('TestStruct', structDefinitionOne);
+        data = new TestStruct(structObjectOne);
         dataBuf = data.toBuffer();
 
         const refData = TestStruct.fromBuffer<typeof structDefinitionOne>(dataBuf);
+        // refData.uint8Prop.trim()
+        // refData.uint8Profp.trim()
         assert.equal(refData.booleanProp, structObjectOne.booleanProp);
         assert.equal(refData.data8Prop, structObjectOne.data8Prop);
         assert.equal(refData.uint16Prop, structObjectOne.uint16Prop);
@@ -101,16 +104,16 @@ describe('Struct()', function () {
       let data;
       let dataBuf: Buffer;
       it('should parse test data to buffer', function () {
-        const TestStruct = Struct<typeof structDefinitionTwo>('TestStruct', structDefinitionTwo);
-        data = new TestStruct<typeof structDefinitionTwo>(structObjectTwo);
+        const TestStruct = Struct('TestStruct', structDefinitionTwo);
+        data = new TestStruct(structObjectTwo);
         dataBuf = data.toBuffer();
         assert(
           dataBuf.equals(Buffer.from('0474657374f401030401000200030004000202010101010101', 'hex'))
         );
       });
       it('should parse test data from buffer', function () {
-        const TestStruct = Struct<typeof structDefinitionTwo>('TestStruct', structDefinitionTwo);
-        data = new TestStruct<typeof structDefinitionTwo>(structObjectTwo);
+        const TestStruct = Struct('TestStruct', structDefinitionTwo);
+        data = new TestStruct(structObjectTwo);
         dataBuf = data.toBuffer();
 
         const refData = TestStruct.fromBuffer<typeof structDefinitionTwo>(dataBuf);

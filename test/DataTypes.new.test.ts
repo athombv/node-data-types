@@ -4,7 +4,7 @@ import { DataType } from '../lib_ts/DataType';
 import { DataTypes } from '../lib_ts/DataTypes';
 import { Bitmap } from '../lib_ts/Bitmap';
 
-describe.skip('DataTypes (new)', function () {
+describe('DataTypes (new)', function () {
   describe('bool', function () {
     it('should parse to buffer', function () {
       const buffer = Buffer.from([0]);
@@ -60,7 +60,9 @@ describe.skip('DataTypes (new)', function () {
       assert.deepEqual(buffer, expectedBuffer);
     });
     it('should have default value', function () {
-      assert.equal(DataTypes.map8().defaultValue, undefined);
+      const emptyBitmap = new Bitmap(Buffer.from([0]), []);
+      assert(DataTypes.map8().defaultValue instanceof Bitmap);
+      assert.deepEqual(DataTypes.map8().defaultValue, emptyBitmap);
     });
   });
   describe('enum8', function () {
