@@ -211,13 +211,60 @@ function arrayFromBuf<T>(this: HasLength & HasArgs, buffer: Buffer, index: numbe
 }
 
 // TODO: instead of defaultValue generic use this map?
-type TypesMap = {
-  bool: boolean | null;
+export type TypesMap = {
+  noData: undefined | { result: null; length: 0 };
+  data8: number;
+  data16: number;
+  data24: number;
+  data32: number;
+  data40: Buffer;
+  data48: Buffer;
+  data56: Buffer;
+  data64: Buffer;
+  bool: null | boolean; // TODO: can these be undefined?
+  map8: undefined | Bitmap; // TODO: can these be undefined?
+  map16: undefined | Bitmap;
+  map24: undefined | Bitmap;
+  map32: undefined | Bitmap;
+  map40: undefined | Bitmap;
+  map48: undefined | Bitmap;
+  map56: undefined | Bitmap;
+  map64: undefined | Bitmap;
   uint8: number;
+  uint16: number;
+  uint24: number;
+  uint32: number;
+  uint40: number;
+  uint48: number;
+  int8: number;
+  int16: number;
+  int24: number;
+  int32: number;
+  int40: number;
+  int48: number;
+  enum8: undefined | string;
+  enum16: undefined | string;
+  enum32: undefined | string;
+  // single: boolean;
+  // double: boolean;
+  // octstr: boolean;
+  string: undefined | string;
+  // EUI48: boolean;
+  // EUI64: boolean;
+  // key128: boolean;
+  // uint4: boolean;
+  // enum4: boolean;
+  // map4: boolean;
+  // buffer: boolean;
+  // buffer8: boolean;
+  // buffer16: boolean;
+  Array0: boolean; // TODO: generic type
+  Array8: boolean; // TODO: generic type
+  // FixedString: boolean;
 };
 
 export const DataTypes = {
-  noData: new DataType<undefined | { result: null; length: 0 }>(
+  noData: new DataType<TypesMap['noData']>(
     0,
     'noData',
     0,
@@ -226,49 +273,49 @@ export const DataTypes = {
     undefined
   ),
   //
-  data8: new DataType<number>(8, 'data8', 1, uintToBufBE, uintFromBufBE, 0),
-  data16: new DataType<number>(9, 'data16', 2, uintToBufBE, uintFromBufBE, 0),
-  data24: new DataType<number>(10, 'data24', 3, uintToBufBE, uintFromBufBE, 0),
-  data32: new DataType<number>(11, 'data32', 4, uintToBufBE, uintFromBufBE, 0),
+  data8: new DataType<TypesMap['data8']>(8, 'data8', 1, uintToBufBE, uintFromBufBE),
+  data16: new DataType<TypesMap['data16']>(9, 'data16', 2, uintToBufBE, uintFromBufBE),
+  data24: new DataType<TypesMap['data24']>(10, 'data24', 3, uintToBufBE, uintFromBufBE),
+  data32: new DataType<TypesMap['data32']>(11, 'data32', 4, uintToBufBE, uintFromBufBE),
   // TODO: difference with data8 which returns a number?
-  data40: new DataType<Buffer>(12, 'data40', 5, dataToBuf, dataFromBuf, Buffer.alloc(0)),
-  data48: new DataType<Buffer>(13, 'data48', 6, dataToBuf, dataFromBuf, Buffer.alloc(0)),
-  data56: new DataType<Buffer>(14, 'data56', 7, dataToBuf, dataFromBuf, Buffer.alloc(0)),
-  data64: new DataType<Buffer>(15, 'data64', 8, dataToBuf, dataFromBuf, Buffer.alloc(0)),
+  data40: new DataType<TypesMap['data40']>(12, 'data40', 5, dataToBuf, dataFromBuf),
+  data48: new DataType<TypesMap['data48']>(13, 'data48', 6, dataToBuf, dataFromBuf),
+  data56: new DataType<TypesMap['data56']>(14, 'data56', 7, dataToBuf, dataFromBuf),
+  data64: new DataType<TypesMap['data64']>(15, 'data64', 8, dataToBuf, dataFromBuf),
   // TODO: why should this return null
-  bool: new DataType<boolean | null>(16, 'bool', 1, boolToBuf, boolFromBuf, false),
+  bool: new DataType<TypesMap['bool']>(16, 'bool', 1, boolToBuf, boolFromBuf),
   //
-  map8: (...args: string[]) => new DataType<Bitmap | undefined>(24, 'map8', 1, bitmapToBuf, bitmapFromBuf, undefined, ...args),
-  map16: (...args: string[]) => new DataType<Bitmap | undefined>(25, 'map16', 2, bitmapToBuf, bitmapFromBuf, undefined, ...args),
-  map24: (...args: string[]) => new DataType<Bitmap | undefined>(26, 'map24', 3, bitmapToBuf, bitmapFromBuf, undefined, ...args),
-  map32: (...args: string[]) => new DataType<Bitmap | undefined>(27, 'map32', 4, bitmapToBuf, bitmapFromBuf, undefined, ...args),
-  map40: (...args: string[]) => new DataType<Bitmap | undefined>(28, 'map40', 5, bitmapToBuf, bitmapFromBuf, undefined, ...args),
-  map48: (...args: string[]) => new DataType<Bitmap | undefined>(29, 'map48', 6, bitmapToBuf, bitmapFromBuf, undefined, ...args),
-  map56: (...args: string[]) => new DataType<Bitmap | undefined>(30, 'map56', 7, bitmapToBuf, bitmapFromBuf, undefined, ...args),
-  map64: (...args: string[]) => new DataType<Bitmap | undefined>(31, 'map64', 8, bitmapToBuf, bitmapFromBuf, undefined, ...args),
+  map8: (...args: string[]) => new DataType<TypesMap['map8']>(24, 'map8', 1, bitmapToBuf, bitmapFromBuf, ...args),
+  map16: (...args: string[]) => new DataType<TypesMap['map16']>(25, 'map16', 2, bitmapToBuf, bitmapFromBuf, ...args),
+  map24: (...args: string[]) => new DataType<TypesMap['map24']>(26, 'map24', 3, bitmapToBuf, bitmapFromBuf, ...args),
+  map32: (...args: string[]) => new DataType<TypesMap['map32']>(27, 'map32', 4, bitmapToBuf, bitmapFromBuf, ...args),
+  map40: (...args: string[]) => new DataType<TypesMap['map40']>(28, 'map40', 5, bitmapToBuf, bitmapFromBuf, ...args),
+  map48: (...args: string[]) => new DataType<TypesMap['map48']>(29, 'map48', 6, bitmapToBuf, bitmapFromBuf, ...args),
+  map56: (...args: string[]) => new DataType<TypesMap['map56']>(30, 'map56', 7, bitmapToBuf, bitmapFromBuf, ...args),
+  map64: (...args: string[]) => new DataType<TypesMap['map64']>(31, 'map64', 8, bitmapToBuf, bitmapFromBuf, ...args),
   //
-  uint8: new DataType<number>(32, 'uint8', 1, uintToBuf, uintFromBuf, 0),
-  uint16: new DataType<number>(33, 'uint16', 2, uintToBuf, uintFromBuf, 0),
-  uint24: new DataType<number>(34, 'uint24', 3, uintToBuf, uintFromBuf, 0),
-  uint32: new DataType<number>(35, 'uint32', 4, uintToBuf, uintFromBuf, 0),
-  uint40: new DataType<number>(36, 'uint40', 5, uintToBuf, uintFromBuf, 0),
-  uint48: new DataType<number>(37, 'uint48', 6, uintToBuf, uintFromBuf, 0),
+  uint8: new DataType<TypesMap['uint8']>(32, 'uint8', 1, uintToBuf, uintFromBuf),
+  uint16: new DataType<TypesMap['uint16']>(33, 'uint16', 2, uintToBuf, uintFromBuf),
+  uint24: new DataType<TypesMap['uint24']>(34, 'uint24', 3, uintToBuf, uintFromBuf),
+  uint32: new DataType<TypesMap['uint32']>(35, 'uint32', 4, uintToBuf, uintFromBuf),
+  uint40: new DataType<TypesMap['uint40']>(36, 'uint40', 5, uintToBuf, uintFromBuf),
+  uint48: new DataType<TypesMap['uint48']>(37, 'uint48', 6, uintToBuf, uintFromBuf),
   //
-  int8: new DataType<number>(40, 'int8', 1, intToBuf, intFromBuf, 0),
-  int16: new DataType<number>(41, 'int16', 2, intToBuf, intFromBuf, 0),
-  int24: new DataType<number>(42, 'int24', 3, intToBuf, intFromBuf, 0),
-  int32: new DataType<number>(43, 'int32', 4, intToBuf, intFromBuf, 0),
-  int40: new DataType<number>(44, 'int40', 5, intToBuf, intFromBuf, 0),
-  int48: new DataType<number>(45, 'int48', 6, intToBuf, intFromBuf, 0),
+  int8: new DataType<TypesMap['int8']>(40, 'int8', 1, intToBuf, intFromBuf),
+  int16: new DataType<TypesMap['int16']>(41, 'int16', 2, intToBuf, intFromBuf),
+  int24: new DataType<TypesMap['int24']>(42, 'int24', 3, intToBuf, intFromBuf),
+  int32: new DataType<TypesMap['int32']>(43, 'int32', 4, intToBuf, intFromBuf),
+  int40: new DataType<TypesMap['int40']>(44, 'int40', 5, intToBuf, intFromBuf),
+  int48: new DataType<TypesMap['int48']>(45, 'int48', 6, intToBuf, intFromBuf),
   //
-  enum8: (enumDefinition: EnumDefinition) => new DataType<string | undefined>(48, 'enum8', 1, enumToBuf, enumFromBuf, undefined, enumDefinition),
-  enum16: (enumDefinition: EnumDefinition) => new DataType<string | undefined>(49, 'enum16', 2, enumToBuf, enumFromBuf, undefined, enumDefinition),
-  enum32: (enumDefinition: EnumDefinition) => new DataType<string | undefined>(NaN, 'enum32', 4, enumToBuf, enumFromBuf, undefined, enumDefinition),
+  enum8: (enumDefinition: EnumDefinition) => new DataType<TypesMap['enum8']>(48, 'enum8', 1, enumToBuf, enumFromBuf, enumDefinition),
+  enum16: (enumDefinition: EnumDefinition) => new DataType<TypesMap['enum16']>(49, 'enum16', 2, enumToBuf, enumFromBuf, enumDefinition),
+  enum32: (enumDefinition: EnumDefinition) => new DataType<TypesMap['enum32']>(NaN, 'enum32', 4, enumToBuf, enumFromBuf, enumDefinition),
   //
   // TODO: single
   // TODO: double
   // TODO: ocstr
-  string: new DataType<string | undefined>(66, 'string', -1, utf8StringToBuf, utf8StringFromBuf, ''),
+  string: new DataType<TypesMap['string']>(66, 'string', -1, utf8StringToBuf, utf8StringFromBuf),
   // TODO: EUI48
   // TODO: EUI64
   // TODO: key128
@@ -280,7 +327,7 @@ export const DataTypes = {
   // TODO: buffer
   // TODO: buffer8
   // TODO: buffer16
-  Array0: <T>(a: DataType<T>) => new DataType<T[]>(NaN, '_Array0', -0, arrayToBuf, arrayFromBuf<T>, [], a),
-  Array8: <T>(a: DataType<T>) => new DataType<T[]>(NaN, '_Array8', -1, arrayToBuf, arrayFromBuf<T>, [], a)
+  Array0: <T>(a: DataType<T>) => new DataType<T[]>(NaN, '_Array0', -0, arrayToBuf, arrayFromBuf<T>, a), // TODO: generic defaultValue?
+  Array8: <T>(a: DataType<T>) => new DataType<T[]>(NaN, '_Array8', -1, arrayToBuf, arrayFromBuf<T>, a) // TODO: generic defaultValue?
   // TODO: FixedString
 };

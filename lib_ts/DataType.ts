@@ -1,6 +1,6 @@
 export class DataType<T> {
   args: unknown[];
-
+  defaultValue: T;
   /**
    * @param {number} id
    * @param {string} shortName
@@ -25,10 +25,10 @@ export class DataType<T> {
       index: number,
       returnLength?: boolean
     ) => T | { length: number; result: T },
-    public defaultValue: T,
     ...args: any[]
   ) {
     this.args = args;
+    this.defaultValue = this.fromBuffer(Buffer.alloc(Math.ceil(Math.abs(this.length))), 0, false);
   }
 
   // This overload is need to properly type the return value of fromBuffer
