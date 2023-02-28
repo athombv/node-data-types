@@ -1,7 +1,10 @@
 'use strict';
 
 const assert = require('assert').strict;
-const { DataType } = require('..');
+
+const { getDataType } = require('./util');
+
+const DataType = getDataType();
 
 describe('DataType', function() {
   it('instance should have properties [id,shortName,length,toBuffer,fromBuffer,args,defaultValue,isAnalog]', function() {
