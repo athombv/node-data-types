@@ -2,6 +2,27 @@ import { strict as assert } from 'assert';
 
 import { DataType } from './DataType';
 
+function getStructSize(structDefinition: { [key: string]: DataType<unknown> }) {
+  let size = 0;
+  let varsize = false;
+
+  // Loop all data types in this definition
+  for (const dataType of Object.values(structDefinition)) {
+    // If length of data type is number and bigger than zero add it to size
+    if (typeof dataType.length === 'number' && dataType.length > 0) {
+      size += dataType.length;
+    } else {
+      // If not a number or negative this struct has a variable size
+      varsize = true;
+    }
+  }
+
+  return {
+    size,
+    varsize
+  };
+}
+
 export type StructDefWrap<T extends { [key: string]: { defaultValue: any } }> = {
   [Key in keyof T]: T[Key]['defaultValue'] extends infer DefaultType
     ? DefaultType extends string
@@ -14,8 +35,12 @@ export type StructDefWrap<T extends { [key: string]: { defaultValue: any } }> = 
     : never;
 };
 
+// TODO: this class implementation can be removed when Struct() is fully working
 export class StructClass<T extends { [key: string]: { defaultValue: any } }> {
-  constructor(private structDefinition: { [key: string]: DataType<unknown> }) {}
+  constructor(private structDefinition: { [key: string]: DataType<unknown> }) {
+    // Seal the definition
+    Object.seal(this.structDefinition);
+  }
   index: number = 0;
   toBuffer(
     buffer: Buffer,
@@ -74,136 +99,211 @@ export function Struct<T extends { [key: string]: { defaultValue: any } }>(
   name: string,
   _structDefinition: { [key: string]: DataType<unknown> }
 ) {
-  // let size = 0;
-  // let varsize = false;
-  // for (const dt of Object.values(_structDefinition)) {
-  //   if (typeof dt.length === 'number' && dt.length > 0) {
-  //     size += dt.length;
-  //   } else varsize = true;
-  // }
-  // const r = {
-  //   [name]: class StructClass<T extends { [key: string]: { defaultValue: any } }> {
-  //     structDefinition = _structDefinition;
-  //     // TODO should structDefinition be private?
-  //     constructor(public structImplementation: { [key: string]: DataType<unknown> }) {}
-  //     index: number = 0;
-  //     toBuffer(
-  //       buffer?: Buffer,
-  //       // structImplementation: Record<string, number | boolean | string>,
-  //       index: number = 0
-  //     ): Buffer {
-  //       // if (!buffer) {
-  //       //   buffer = Buffer.alloc(size); // TODO: which size? // TODO: variable size?
-  //       // }
-  //       // for (const [key, value] of Object.entries(this.structDefinition)) {
-  //       //   const dataTypeInstance = this.structDefinition[key];
-  //       //   console.log('dataTypeInstance.toBuffer', buffer, key, index, this.structImplementation[key])
-  //       //   dataTypeInstance.toBuffer(buffer, this.structImplementation[key], index);
-  //       //   index += dataTypeInstance.length;
-  //       // }
-  //       // return buffer;
+  // Determine size of struct (and if size is variable)
+  const { size, varsize } = getStructSize(_structDefinition);
 
-  //       let length = 0;
-  //       index = index || 0;
+  // Seal the definition
+  Object.seal(_structDefinition);
 
-  //       if (varsize && !buffer) {
-  //         buffer = Buffer.alloc(size + 255); // TODO:fix my size
-  //       } else if (!buffer) {
-  //         buffer = Buffer.alloc(size);
-  //       }
+  // TODO: clean this up
+  const r = {
+    [name]: class StructClass<T extends { [key: string]: { defaultValue: any } }> {
+      constructor(
+        public structImplementation: Record<
+          string,
+          number | boolean | string | string[] | number[] | Buffer
+        >
+      ) {
+        for (const key in structImplementation) {
+          if (!_structDefinition[key]) {
+            throw new TypeError(`${this.constructor.name}: ${key} is an unexpected property`);
+          }
+          // TODO: clean this up
+          // @ts-expect-error
+          this[key] = structImplementation[key];
+        }
+        // eslint-disable-next-line no-restricted-syntax
+        for (const key in _structDefinition) {
+          if (typeof structImplementation[key] === 'undefined') {
+            // TODO: clean this up
+            // @ts-expect-error
+            this[key] = _structDefinition[key].defaultValue;
+          }
+        }
+      }
 
-  //       // eslint-disable-next-line guard-for-in,no-restricted-syntax
-  //       for (const p in _structDefinition) {
-  //         // eslint-disable-next-line no-shadow
-  //         let varsize = _structDefinition[p].length;
-  //         if (_structDefinition[p].length <= 0) {
-  //           const rBuf = _structDefinition[p].toBuffer(
-  //             buffer,
-  //             this.structImplementation[p],
-  //             index + length
-  //           );
-  //           // eslint-disable-next-line no-nested-ternary
-  //           varsize = Number.isFinite(rBuf) ? rBuf : Buffer.isBuffer(rBuf) ? rBuf.length : 0;
-  //         } else
-  //           _structDefinition[p].toBuffer(buffer, this.structImplementation[p], index + length);
+      toBuffer(buffer?: Buffer, index: number = 0): Buffer {
+        let length = 0;
 
-  //         length += varsize;
-  //       }
+        if (varsize && !buffer) {
+          buffer = Buffer.alloc(size + 255); // TODO: fix my size
+        } else if (!buffer) {
+          buffer = Buffer.alloc(size);
+        }
 
-  //       return buffer.subarray(index, index + length);
-  //     }
-  //     static fromBuffer(buffer: Buffer, index: number, returnLength?: boolean) {
-  //       index = index || 0;
-  //       let length = 0;
-  //       // @ts-expect-error whut?
-  //       const result = new this(); // TODO:?
-  //       // eslint-disable-next-line no-restricted-syntax
-  //       for (const p in _structDefinition) {
-  //         if (_structDefinition[p].length > 0) {
-  //           // @ts-expect-error whut?
-  //           result[p] = _structDefinition[p].fromBuffer(buffer, index + length, false);
-  //           length += _structDefinition[p].length;
-  //         } else {
-  //           const entry = _structDefinition[p].fromBuffer(
-  //             buffer.slice(index, index + buffer.length - (size - length)),
-  //             length,
-  //             true
-  //           );
-  //           // @ts-expect-error whut?
-  //           result[p] = entry.result;
-  //           length += entry.length;
-  //         }
-  //       }
-  //       if (returnLength && varsize) {
-  //         return {
-  //           result,
-  //           length
-  //         };
-  //       }
-  //       return result;
-  //     }
+        // TODO: update implementation based on Struct.js?
+        // TODO: clean this up
+        for (const [key, value] of Object.entries(_structDefinition)) {
+          let _varsize = _structDefinition[key].length;
+          const dataTypeInstance = _structDefinition[key];
 
-  //     fromBuffer(buffer: Buffer) {
-  //       let index = 0;
-  //       const result: Partial<StructDefWrap<T>> = {};
-  //       for (const [key, dataTypeInstance] of Object.entries(this.structDefinition)) {
-  //         // @ts-expect-error not sure why?
-  //         result[key] = dataTypeInstance.fromBuffer(buffer, index);
-  //         index += dataTypeInstance.length;
-  //       }
+          if (_varsize <= 0) {
+            const rBuf = dataTypeInstance.toBuffer(
+              buffer,
+              this.structImplementation[key],
+              index + length
+            );
+            // eslint-disable-next-line no-nested-ternary
+            _varsize = Number.isFinite(rBuf) ? rBuf : Buffer.isBuffer(rBuf) ? rBuf.length : 0;
+          } else {
+            dataTypeInstance.toBuffer(buffer, this.structImplementation[key], index + length);
+          }
+          length += _varsize;
+        }
 
-  //       // Make sure result keys are as defined in struct
-  //       const resultKeys = Object.keys(result);
-  //       const structDefinitionKeys = Object.keys(this.structDefinition);
-  //       try {
-  //         assert.deepStrictEqual(resultKeys, structDefinitionKeys);
-  //       } catch {
-  //         // Throw informative error about missing keys
-  //         throw new Error(
-  //           `Result parsed from buffer is missing keys from struct definition. Expected: ${structDefinitionKeys}, got: ${resultKeys}.`
-  //         );
-  //       }
+        return buffer.subarray(index, index + length);
+      }
 
-  //       // Make sure result types are as defined in struct
-  //       const resultTypes = Object.values(result).map((x) => typeof x);
-  //       const structDefinitionTypes = Object.values(this.structDefinition).map(
-  //         (x) => typeof x.defaultValue
-  //       );
-  //       try {
-  //         assert.deepStrictEqual(resultTypes, structDefinitionTypes);
-  //       } catch {
-  //         // Throw informative error about invalid value types
-  //         throw new Error(
-  //           `Result parsed from buffer has different value types then struct definition. Expected: ${structDefinitionTypes}, got: ${resultTypes}.`
-  //         );
-  //       }
+      // TODO:
+      // static get length() {
+      //   return varsize ? -size : size;
+      // }
 
-  //       // Now we can safely assume result is of type derived from struct definition
-  //       return result as StructDefWrap<T>;
-  //     }
-  //   }
-  // };
-  // return r[name];
+      // TODO:
+      // static get name() {
+      //   return name;
+      // }
 
-  return new StructClass<T>(_structDefinition);
+      // TODO:
+      // static fromJSON(props) {
+      //   return new this(props);
+      // }
+
+      // TODO:
+      // toJSON() {
+      //   const result = {};
+
+      //   // eslint-disable-next-line guard-for-in,no-restricted-syntax
+      //   for (const key in defs) {
+      //     result[key] = this[key];
+      //   }
+
+      //   return result;
+      // }
+
+      // TODO:
+      // static fromArgs(...args) {
+      //   return new this(Object.keys(defs).reduce((res, key, i) => {
+      //     res[key] = args[i];
+      //     return res;
+      //   }, {}));
+      // }
+
+      static get fields() {
+        return _structDefinition;
+      }
+
+      static toBuffer(buffer: Buffer, value: unknown, index: number) {
+        //TODO: clean this up
+        // @ts-expect-error
+        if (!(value instanceof this.constructor)) value = new this(value);
+        if (!(value instanceof StructClass)) throw new TypeError('Expected Struct instance');
+        return value.toBuffer(buffer, index);
+      }
+
+      // Overloading here is necessary due to return type that depends on
+      // returnLength being true or not.
+      static fromBuffer<T extends { [key: string]: { defaultValue: any } }>(
+        buffer: Buffer,
+        index?: number
+      ): StructDefWrap<T>;
+      static fromBuffer<T extends { [key: string]: { defaultValue: any } }>(
+        buffer: Buffer,
+        index?: number,
+        returnLength?: false
+      ): StructDefWrap<T>;
+      static fromBuffer<T extends { [key: string]: { defaultValue: any } }>(
+        buffer: Buffer,
+        index?: number,
+        returnLength?: true
+      ): { result: StructDefWrap<T>; length: number };
+      static fromBuffer<T extends { [key: string]: { defaultValue: any } }>(
+        buffer: Buffer,
+        index: number = 0,
+        returnLength: boolean = false
+      ): StructDefWrap<T> | { result: StructDefWrap<T>; length: number } {
+        let length = 0;
+
+        // TODO: clean this up
+        const result: Partial<StructDefWrap<T>> = {};
+
+        for (const [key, dataTypeInstance] of Object.entries(_structDefinition)) {
+          if (dataTypeInstance.length > 0) {
+            // @ts-expect-error not sure why?
+            result[key] = dataTypeInstance.fromBuffer(buffer, index + length);
+            length += dataTypeInstance.length;
+          } else {
+            const entry = dataTypeInstance.fromBuffer(
+              buffer.subarray(index, index + buffer.length - (size - length)),
+              length,
+              true
+            );
+            // @ts-expect-error not sure why?
+            result[key] = entry.result;
+            length += entry.length;
+          }
+        }
+
+        // Make sure result keys are as defined in struct
+        const resultKeys = Object.keys(result);
+        const structDefinitionKeys = Object.keys(_structDefinition);
+        try {
+          assert.deepStrictEqual(resultKeys, structDefinitionKeys);
+        } catch {
+          // Throw informative error about missing keys
+          throw new Error(
+            `Result parsed from buffer is missing keys from struct definition. Expected: ${structDefinitionKeys}, got: ${resultKeys}.`
+          );
+        }
+
+        // Make sure result types are as defined in struct
+        // TODO: this doesn't work for map/enum with Bitmap and other types, maybe fix using type map in DataTypes.ts?
+        // const resultTypes = Object.values(result).map((x) => typeof x);
+        // const structDefinitionTypes = Object.values(_structDefinition).map(
+        //   (x) => typeof x.defaultValue
+        // );
+        // try {
+        //   console.log('Result types', resultTypes);
+        //   console.log('Result keys', resultKeys);
+        //   console.log('Definition types', structDefinitionTypes);
+        //   console.log('Definition keys', structDefinitionKeys);
+        //   assert.deepStrictEqual(resultTypes, structDefinitionTypes);
+        // } catch {
+        //   // Throw informative error about invalid value types
+        //   throw new Error(
+        //     `Result parsed from buffer has different value types then struct definition. Expected: ${structDefinitionTypes}, got: ${resultTypes}.`
+        //   );
+        // }
+
+        // Now we can safely assume result is of type derived from struct definition
+
+        // TODO:
+        if (returnLength && varsize) {
+          return {
+            length: index,
+            result: result as StructDefWrap<T>
+          };
+        }
+        return result as StructDefWrap<T>;
+      }
+    }
+  };
+  return r[name];
 }
+
+// export function Struct<T extends { [key: string]: { defaultValue: any } }>(
+//   name: string,
+//   _structDefinition: { [key: string]: DataType<unknown> }
+// ) {
+//   return new StructClass<T>(_structDefinition);
+// }

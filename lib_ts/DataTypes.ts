@@ -210,6 +210,12 @@ function arrayFromBuf<T>(this: HasLength & HasArgs, buffer: Buffer, index: numbe
   return res;
 }
 
+// TODO: instead of defaultValue generic use this map?
+type TypesMap = {
+  bool: boolean | null;
+  uint8: number;
+};
+
 export const DataTypes = {
   noData: new DataType<undefined | { result: null; length: 0 }>(
     0,
