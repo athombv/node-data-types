@@ -26,6 +26,6 @@ describe('enum8', function() {
     assert.equal(TestEnum.fromBuffer(buffer, 0), 'VALUE_B');
   });
   it('should have default value', function() {
-    assert.equal(DataTypes.enum8.defaultValue, undefined);
+    assert.equal(DataTypes.enum8({}).defaultValue, undefined);
   });
 });

@@ -32,6 +32,6 @@ describe('map8', function() {
     assert.deepEqual(buffer, expectedBuffer);
   });
   it('should have default value', function() {
-    assert.equal(DataTypes.map8.defaultValue, undefined);
+    assert.equal(testMap.defaultValue, undefined);
   });
 });
