@@ -23,12 +23,7 @@ function isStringArray(value: unknown): value is string[] {
  * Type guard for object with only number values.
  */
 function isObjectWithNumberValues(input: unknown): input is Record<string, number> {
-  return (
-    typeof input === 'object' &&
-    input !== null &&
-    !Array.isArray(input) &&
-    Object.values(input).every((i) => typeof i === 'number')
-  );
+  return typeof input === 'object' && input !== null && !Array.isArray(input) && Object.values(input).every((i) => typeof i === 'number');
 }
 
 function dataToBuf(this: HasLength, buffer: Buffer, value: unknown, index: number): number {
@@ -38,12 +33,7 @@ function dataToBuf(this: HasLength, buffer: Buffer, value: unknown, index: numbe
   return value.copy(buffer, index);
 }
 
-function dataFromBuf(
-  this: HasLength,
-  buffer: Buffer,
-  index: number,
-  returnLength?: boolean
-): Buffer {
+function dataFromBuf(this: HasLength, buffer: Buffer, index: number, returnLength?: boolean): Buffer {
   if (!Buffer.isBuffer(buffer)) throw new TypeError('Expected buffer');
   return buffer.subarray(index, index + this.length);
 }
@@ -60,12 +50,7 @@ function boolToBuf(this: HasLength, buffer: Buffer, value: unknown, index: numbe
   return this.length;
 }
 
-function boolFromBuf(
-  this: HasLength,
-  buffer: Buffer,
-  index: number,
-  returnLength?: boolean
-): boolean | null {
+function boolFromBuf(this: HasLength, buffer: Buffer, index: number, returnLength?: boolean): boolean | null {
   // TODO: this should actually only return a boolean or throw, but that would be a change in behaviour
   if (buffer.length - index < this.length) return null;
   const value = buffer.readUInt8(index);
@@ -79,12 +64,7 @@ function uintToBuf(this: HasLength, buffer: Buffer, value: unknown, index: numbe
   return buffer.writeUIntLE(value, index, this.length) - index;
 }
 
-function uintFromBuf(
-  this: HasLength,
-  buffer: Buffer,
-  index: number,
-  returnLength?: boolean
-): number {
+function uintFromBuf(this: HasLength, buffer: Buffer, index: number, returnLength?: boolean): number {
   if (buffer.length - index < this.length) return 0;
   return buffer.readUIntLE(index, this.length);
 }
@@ -94,12 +74,7 @@ function intToBuf(this: HasLength, buffer: Buffer, value: unknown, index: number
   return buffer.writeIntLE(value, index, this.length) - index;
 }
 
-function intFromBuf(
-  this: HasLength,
-  buffer: Buffer,
-  index: number,
-  returnLength?: boolean
-): number {
+function intFromBuf(this: HasLength, buffer: Buffer, index: number, returnLength?: boolean): number {
   if (buffer.length - index < this.length) return 0;
   return buffer.readIntLE(index, this.length);
 }
@@ -109,21 +84,11 @@ function uintToBufBE(this: HasLength, buffer: Buffer, value: unknown, index: num
   return buffer.writeUIntBE(value, index, this.length) - index;
 }
 
-function uintFromBufBE(
-  this: HasLength,
-  buffer: Buffer,
-  index: number,
-  returnLength?: boolean
-): number {
+function uintFromBufBE(this: HasLength, buffer: Buffer, index: number, returnLength?: boolean): number {
   return buffer.readUIntBE(index, this.length);
 }
 
-function bitmapToBuf(
-  this: HasLength & HasArgs,
-  buffer: Buffer,
-  value: unknown,
-  index: number
-): number {
+function bitmapToBuf(this: HasLength & HasArgs, buffer: Buffer, value: unknown, index: number): number {
   if (!isStringArray(this.args)) throw new TypeError('Expected array of strings');
   if (typeof value === 'number' || isStringArray(value) || value instanceof Bitmap) {
     return Bitmap.toBuffer(buffer, index, this.length, this.args, value);
@@ -136,12 +101,7 @@ function bitmapFromBuf(this: HasLength & HasArgs, buffer: Buffer, index: number)
   return Bitmap.fromBuffer(buffer, index, this.length, this.args);
 }
 
-function enumToBuf(
-  this: HasLength & HasArgs,
-  buffer: Buffer,
-  value: unknown,
-  index: number
-): number {
+function enumToBuf(this: HasLength & HasArgs, buffer: Buffer, value: unknown, index: number): number {
   if (typeof value === 'string' && isObjectWithNumberValues(this.args[0])) {
     value = this.args[0][value];
   }
@@ -163,30 +123,89 @@ function enumFromBuf(this: HasLength & HasArgs, buffer: Buffer, index: number): 
   });
 }
 
+function arrayToBuf(this: HasLength & HasArgs, buffer: Buffer, value: unknown, index: number): number {
+  index = index || 0;
+  value = typeof value !== 'undefined' ? value : [];
+  const [Type] = this.args;
+  if (!(Type instanceof DataType)) throw new TypeError('Expected DataType instance');
+
+  const countSize = Math.abs(this.length);
+  let size = countSize;
+  if (!Array.isArray(value)) throw new TypeError(`Expected array, got ${value}`);
+  if (countSize) {
+    buffer.writeIntLE(value.length, index, countSize);
+  }
+
+  for (const j in value) {
+    const res = Type.toBuffer(buffer, value[j], index + size);
+    if (Type.length > 0) size += Type.length;
+    else if (Buffer.isBuffer(res)) size += res.length;
+    else size += res;
+  }
+  return size;
+}
+
+function arrayFromBuf<T>(this: HasLength & HasArgs, buffer: Buffer, index: number, returnLength?: boolean) {
+  index = index || 0;
+  const [Type] = this.args;
+  if (!(Type instanceof DataType)) throw new TypeError('Expected DataType instance');
+
+  const countSize = Math.abs(this.length);
+
+  const count = countSize ? buffer.readUIntLE(index, countSize) : Infinity;
+  let length = countSize;
+  const res = [];
+  while (index + length < buffer.length && res.length < count) {
+    const entry = Type.fromBuffer(buffer, index + length, true);
+    if (Type.length > 0) {
+      res.push(entry);
+      length += Type.length;
+    } else {
+      if (entry.length <= 0) break;
+      res.push(entry.result);
+      length += entry.length;
+    }
+  }
+  if (returnLength) {
+    return {
+      result: res,
+      length
+    };
+  }
+  return res;
+}
+
 export const DataTypes = {
-  // TODO: noData
+  noData: new DataType<undefined | { result: null; length: 0 }>(
+    0,
+    'noData',
+    0,
+    () => 0,
+    () => ({ result: null, length: 0 }),
+    undefined
+  ),
   //
   data8: new DataType<number>(8, 'data8', 1, uintToBufBE, uintFromBufBE, 0),
-  // TODO: data16
-  // TODO: data24
-  // TODO: data32
+  data16: new DataType<number>(9, 'data16', 2, uintToBufBE, uintFromBufBE, 0),
+  data24: new DataType<number>(10, 'data24', 3, uintToBufBE, uintFromBufBE, 0),
+  data32: new DataType<number>(11, 'data32', 4, uintToBufBE, uintFromBufBE, 0),
   // TODO: difference with data8 which returns a number?
   data40: new DataType<Buffer>(12, 'data40', 5, dataToBuf, dataFromBuf, Buffer.alloc(0)),
-  // TODO: data48
-  // TODO: data56
-  // TODO: data64
+  data48: new DataType<Buffer>(13, 'data48', 6, dataToBuf, dataFromBuf, Buffer.alloc(0)),
+  data56: new DataType<Buffer>(14, 'data56', 7, dataToBuf, dataFromBuf, Buffer.alloc(0)),
+  data64: new DataType<Buffer>(15, 'data64', 8, dataToBuf, dataFromBuf, Buffer.alloc(0)),
   // TODO: why should this return null
   bool: new DataType<boolean | null>(16, 'bool', 1, boolToBuf, boolFromBuf, false),
   //
-  map8: (...args: string[]) =>
-    new DataType<Bitmap>(24, 'map8', 1, bitmapToBuf, bitmapFromBuf, new Bitmap(0, []), ...args),
-  // TODO: map16
-  // TODO: map24
-  // TODO: map32
-  // TODO: map40
-  // TODO: map48
-  // TODO: map56
-  // TODO: map64
+  map8: (...args: string[]) => new DataType<Bitmap | undefined>(24, 'map8', 1, bitmapToBuf, bitmapFromBuf, undefined, ...args),
+  map16: (...args: string[]) => new DataType<Bitmap | undefined>(25, 'map16', 2, bitmapToBuf, bitmapFromBuf, undefined, ...args),
+  map24: (...args: string[]) => new DataType<Bitmap | undefined>(26, 'map24', 3, bitmapToBuf, bitmapFromBuf, undefined, ...args),
+  map32: (...args: string[]) => new DataType<Bitmap | undefined>(27, 'map32', 4, bitmapToBuf, bitmapFromBuf, undefined, ...args),
+  map40: (...args: string[]) => new DataType<Bitmap | undefined>(28, 'map40', 5, bitmapToBuf, bitmapFromBuf, undefined, ...args),
+  map48: (...args: string[]) => new DataType<Bitmap | undefined>(29, 'map48', 6, bitmapToBuf, bitmapFromBuf, undefined, ...args),
+  map56: (...args: string[]) => new DataType<Bitmap | undefined>(30, 'map56', 7, bitmapToBuf, bitmapFromBuf, undefined, ...args),
+  map64: (...args: string[]) => new DataType<Bitmap | undefined>(31, 'map64', 8, bitmapToBuf, bitmapFromBuf, undefined, ...args),
+  //
   uint8: new DataType<number>(32, 'uint8', 1, uintToBuf, uintFromBuf, 0),
   uint16: new DataType<number>(33, 'uint16', 2, uintToBuf, uintFromBuf, 0),
   uint24: new DataType<number>(34, 'uint24', 3, uintToBuf, uintFromBuf, 0),
@@ -201,19 +220,10 @@ export const DataTypes = {
   int40: new DataType<number>(44, 'int40', 5, intToBuf, intFromBuf, 0),
   int48: new DataType<number>(45, 'int48', 6, intToBuf, intFromBuf, 0),
   //
-  enum8: (enumDefinition: EnumDefinition) =>
-    new DataType<string | undefined>(
-      48,
-      'enum8',
-      1,
-      enumToBuf,
-      enumFromBuf,
-      undefined,
-      enumDefinition
-    )
-  // TODO: enum16
-  // TODO: enum32
-
+  enum8: (enumDefinition: EnumDefinition) => new DataType<string | undefined>(48, 'enum8', 1, enumToBuf, enumFromBuf, undefined, enumDefinition),
+  enum16: (enumDefinition: EnumDefinition) => new DataType<string | undefined>(49, 'enum16', 2, enumToBuf, enumFromBuf, undefined, enumDefinition),
+  enum32: (enumDefinition: EnumDefinition) => new DataType<string | undefined>(NaN, 'enum32', 4, enumToBuf, enumFromBuf, undefined, enumDefinition),
+  //
   // TODO: single
   // TODO: double
   // TODO: ocstr
@@ -229,7 +239,7 @@ export const DataTypes = {
   // TODO: buffer
   // TODO: buffer8
   // TODO: buffer16
-  // TODO: Array0
-  // TODO: Array8
+  Array0: <T>(a: DataType<T>) => new DataType<T[]>(NaN, '_Array0', -0, arrayToBuf, arrayFromBuf<T>, [], a),
+  Array8: <T>(a: DataType<T>) => new DataType<T[]>(NaN, '_Array8', -1, arrayToBuf, arrayFromBuf<T>, [], a)
   // TODO: FixedString
 };
