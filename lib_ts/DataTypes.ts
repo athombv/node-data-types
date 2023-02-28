@@ -123,6 +123,41 @@ function enumFromBuf(this: HasLength & HasArgs, buffer: Buffer, index: number): 
   });
 }
 
+function utf8StringToBuf(this: HasLength, buffer: Buffer, value: unknown, index: number) {
+  if (typeof value !== 'string') throw new TypeError('Expected string');
+  // Convert string to buffer
+  value = Buffer.from(String(value), 'utf8');
+  if (!(value instanceof Buffer)) throw new TypeError('Expected buffer');
+
+  const length = Math.abs(this.length);
+  index = buffer.writeUIntLE(value.length, index, length);
+  return value.copy(buffer, index) + length;
+}
+
+function utf8StringFromBuf(this: HasLength, buffer: Buffer, index: number, returnLength?: boolean) {
+  index = index || 0;
+  let length = Math.abs(this.length);
+  const size = buffer.readUIntLE(index, length);
+  const result = buffer.subarray(index + length, index + length + size);
+  length += result.length;
+
+  let parsedResult = result.toString('utf8');
+  parsedResult = parsedResult.split('\u0000')[0]; // Remove everything after string terminator
+  // eslint-disable-next-line no-control-regex
+  parsedResult = parsedResult.replace(/[\u0000-\u001F](\[(B|C|D|A))?/g, ''); // Replace remaining
+  parsedResult = parsedResult.trim(); // Trim excessive white space
+
+  if (typeof parsedResult !== 'string') throw new TypeError('');
+
+  if (returnLength) {
+    return {
+      result: parsedResult,
+      length
+    };
+  }
+  return parsedResult;
+}
+
 function arrayToBuf(this: HasLength & HasArgs, buffer: Buffer, value: unknown, index: number): number {
   index = index || 0;
   value = typeof value !== 'undefined' ? value : [];
@@ -227,7 +262,7 @@ export const DataTypes = {
   // TODO: single
   // TODO: double
   // TODO: ocstr
-  // TODO: string
+  string: new DataType<string | undefined>(66, 'string', -1, utf8StringToBuf, utf8StringFromBuf, ''),
   // TODO: EUI48
   // TODO: EUI64
   // TODO: key128
