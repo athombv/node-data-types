@@ -20,11 +20,33 @@ export class DataType<T> {
     /**
      * Returns value with type T.
      */
-    public fromBuffer: (buffer: Buffer, index: number, returnLength?: boolean) => T,
+    private _fromBuffer: (
+      buffer: Buffer,
+      index: number,
+      returnLength?: boolean
+    ) => T | { length: number; result: T },
     public defaultValue: T,
     ...args: any[]
   ) {
     this.args = args;
+  }
+
+  // This overload is need to properly type the return value of fromBuffer
+  // based on the returnLength parameter
+  public fromBuffer(buffer: Buffer, index: number): T;
+  public fromBuffer(
+    buffer: Buffer,
+    index: number,
+    returnLength: true
+  ): { length: number; result: T };
+  public fromBuffer(buffer: Buffer, index: number, returnLength: boolean = false): any {
+    // If returnLength is true return object
+    if (returnLength) {
+      return this._fromBuffer(buffer, index, returnLength);
+    }
+
+    // If returnLength is not true return T
+    return this._fromBuffer(buffer, index);
   }
 
   get isAnalog() {
