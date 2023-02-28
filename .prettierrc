@@ -2,5 +2,13 @@
   "semi": true,
   "trailingComma": "none",
   "singleQuote": true,
-  "printWidth": 100
+  "printWidth": 100,
+  "overrides": [
+    {
+      "files": "DataTypes.ts",
+      "options": {
+        "printWidth": 250
+      }
+    }
+  ]
 }
