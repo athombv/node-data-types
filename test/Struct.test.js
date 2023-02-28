@@ -29,10 +29,13 @@ const testData = {
   field6: ['bit2', 'bit9'],
 };
 
-const data = new TestStruct(testData);
-const dataBuf = data.toBuffer();
-
 describe('Struct', function() {
+  let data;
+  let dataBuf;
+  beforeEach(function() {
+    data = new TestStruct(testData);
+    dataBuf = data.toBuffer();
+  });
   it('should parse test data to buffer', function() {
     assert(dataBuf.equals(Buffer.from('0474657374f40103040100020003000400020201', 'hex')));
   });
