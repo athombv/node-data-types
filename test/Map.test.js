@@ -2,9 +2,11 @@
 
 const assert = require('assert').strict;
 
-const { getDataTypes } = require('./util');
+const { getDataTypes, getBitmap } = require('./util');
 
 const DataTypes = getDataTypes();
+
+const Bitmap = getBitmap();
 
 describe('map8', function() {
   const bits = ['bit1', 'bit2', 'bit3', 'bit4'];
@@ -32,6 +34,8 @@ describe('map8', function() {
     assert.deepEqual(buffer, expectedBuffer);
   });
   it('should have default value', function() {
-    assert.equal(testMap.defaultValue, undefined);
+    const emptyBitmap = new Bitmap(Buffer.from([0]), []);
+    assert(DataTypes.map8().defaultValue instanceof Bitmap);
+    assert.deepEqual(DataTypes.map8().defaultValue, emptyBitmap);
   });
 });

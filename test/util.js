@@ -16,9 +16,13 @@ function getStruct() {
   return require('../lib/Struct');
 }
 
+function getBitmap() {
+  return require('../lib/Bitmap');
+}
 
 module.exports = {
   getStruct,
   getDataType,
   getDataTypes,
+  getBitmap,
 };
