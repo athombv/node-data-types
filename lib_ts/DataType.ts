@@ -34,6 +34,7 @@ export class DataType<T> {
   // This overload is need to properly type the return value of fromBuffer
   // based on the returnLength parameter
   public fromBuffer(buffer: Buffer, index: number): T;
+  public fromBuffer(buffer: Buffer, index: number, returnLength: false): T;
   public fromBuffer(
     buffer: Buffer,
     index: number,
