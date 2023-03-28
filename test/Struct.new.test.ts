@@ -9,7 +9,7 @@ import { Struct } from '../lib_ts/Struct';
 // - node-zigbee
 // - node-zstack
 
-// Nested structs
+// TODO: Nested structs
 
 const structDefinitionOne = {
   booleanProp: DataTypes.bool,
@@ -66,7 +66,7 @@ describe('Struct', function () {
       assert(dataBuf.equals(Buffer.from('017b307508', 'hex')));
     });
     it('should parse test data from buffer', function () {
-      const TestStruct = Struct<typeof structDefinitionOne>('TestStruct', structDefinitionOne);
+      const TestStruct = Struct('TestStruct', structDefinitionOne);
       data = new TestStruct(structObjectOne);
       dataBuf = data.toBuffer();
 
@@ -85,7 +85,7 @@ describe('Struct', function () {
       assert.deepEqual(dataBuf, structBufferOne);
     });
     it('[static] should parse test data from buffer', function () {
-      const TestStruct = Struct<typeof structDefinitionOne>('TestStruct', structDefinitionOne);
+      const TestStruct = Struct('TestStruct', structDefinitionOne);
       const refData = TestStruct.fromBuffer(structBufferOne);
       // refData.booleanProp?.trim();
       // refData.bla;
@@ -105,7 +105,7 @@ describe('Struct', function () {
       );
     });
     it('should parse test data from buffer', function () {
-      const TestStruct = Struct<typeof structDefinitionTwo>('TestStruct', structDefinitionTwo);
+      const TestStruct = Struct('TestStruct', structDefinitionTwo);
       data = new TestStruct(structObjectTwo);
       dataBuf = data.toBuffer();
 
@@ -132,7 +132,7 @@ describe('Struct', function () {
       assert.deepEqual(dataBuf, structBufferTwo);
     });
     it('[static] should parse test data from buffer', function () {
-      const TestStruct = Struct<typeof structDefinitionTwo>('TestStruct', structDefinitionTwo);
+      const TestStruct = Struct('TestStruct', structDefinitionTwo);
       const refData = TestStruct.fromBuffer(structBufferTwo);
       // refData.booleanProp.trim();
       // refData.bla;
