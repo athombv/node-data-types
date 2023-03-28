@@ -33,7 +33,7 @@ type StructDefinition = { [key: string]: DataType<unknown> };
 
 export function Struct<T extends StructDefinition>(
   name: string,
-  _structDefinition: StructDefinition
+  _structDefinition: T
 ) {
   // Determine size of struct (and if size is variable)
   const { size, varsize } = getStructSize(_structDefinition);
@@ -170,7 +170,8 @@ export function Struct<T extends StructDefinition>(
 
       // Result object will be the inferred struct type:
       // { booleanProp: DataType<boolean> } -> { booleanProp: boolean }
-      const result: InferStructTypesFromDefinition<typeof _structDefinition> = {};
+      // TODO: not the neatest solution?
+      const result: InferStructTypesFromDefinition<typeof _structDefinition> | Record<string, unknown> = {};
 
       // Loop the struct definition ({ booleanProp: DataType<boolean> })
       for (const [key, dataTypeInstance] of Object.entries(_structDefinition)) {
