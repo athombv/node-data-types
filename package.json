@@ -2,12 +2,10 @@
   "name": "@athombv/data-types",
   "version": "1.1.2",
   "description": "Binary Data Parsers",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
-    "/lib",
-    "/index.js",
-    "/index.d.ts"
+    "dist"
   ],
   "publishConfig": {
     "access": "public"
@@ -35,8 +33,11 @@
     "@types/debug": "^4.1.7",
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.11.9",
-    "eslint": "^6.8.0",
+    "@typescript-eslint/eslint-plugin": "^5.57.0",
+    "@typescript-eslint/parser": "^5.57.0",
+    "eslint": "^7.32.0",
     "eslint-config-athom": "^2.0.8",
+    "eslint-config-prettier": "^8.8.0",
     "mocha": "^10.2.0",
     "prettier": "^2.8.4"
   },
