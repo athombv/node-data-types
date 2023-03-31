@@ -31,7 +31,7 @@
   },
   "homepage": "https://github.com/athombv/node-data-types#readme",
   "devDependencies": {
-    "@tsconfig/node16": "^1.0.3",
+    "@tsconfig/node12": "^1.0.11",
     "@types/debug": "^4.1.7",
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.11.9",
@@ -41,6 +41,7 @@
     "prettier": "^2.8.4"
   },
   "dependencies": {
-    "source-map-support": "^0.5.21"
+    "source-map-support": "^0.5.21",
+    "typescript": "^5.0.3"
   }
 }
