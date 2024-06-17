@@ -53,7 +53,7 @@ export class DataType<T> {
     index: number,
     returnLength: true
   ): { length: number; result: T };
-  public fromBuffer(buffer: Buffer, offset: number, returnLength: boolean = false): any {
+  public fromBuffer(buffer: Buffer, offset: number, returnLength: boolean = false): T | { length: number; result: T } {
     // If returnLength is true return object
     if (returnLength) {
       return this._fromBuffer(buffer, offset, returnLength);

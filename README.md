@@ -7,3 +7,13 @@ Binary Data Parsers
 ```bash
 $ npm install @athombv/data-types
 ```
+
+## TODO
+
+- [ ] Nested structs
+
+## Changes
+
+- Removed `Struct.toJSON()`
+- Removed `Struct.fromJSON()`
+- Removed `Struct.fromArgs()`
