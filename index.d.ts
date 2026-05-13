@@ -1,143 +1,227 @@
-type ToBuffer = (buffer: Buffer, value: unknown, index: number) => Buffer;
-type FromBuffer = (buffer: Buffer, index: number, returnLength: boolean) => unknown;
-
-declare module "@athombv/data-types" {  
-  interface DataTypeInterface {
-    id: number;
-    shortName: string;
-    length: number;
-    toBuffer: ToBuffer;
-    fromBuffer: FromBuffer;
-    args: unknown[];
-    defaultValue: unknown;
-  
-    isAnalog: () => boolean;
-    inspect: () => string;
-  }
-  
-  interface DataTypeConstructor {
-    new (
+declare module "@athombv/data-types" {
+  class DataType<ToBuffer, FromBuffer = ToBuffer, ToBufferReturn = number> {
+    constructor(
       id: number,
       shortName: string,
       length: number,
-      toBuf: ToBuffer,
-      fromBuf: FromBuffer,
-      ...args: unknown[]
-    ): DataTypeInterface;
-  }
-  
-  interface DataTypeFunctionConstructor {
-    (...args: unknown[]): DataTypeConstructor;
-  }
-  
-  type DataTypeItem =
-    | DataTypeConstructor
-    | DataTypeFunctionConstructor
-    | { [name: string]: DataTypeItem }; // This OR is needed for Structs with a second level of DataTypes
-  
-  type GenericMap<T> = {
-    [K in keyof T]: DataTypeItem;
-  };
-  
-  interface StructTypeInterface<T> {
-    toJSON: () => T;
-    toBuffer: (buffer?: Buffer, index?: number) => Buffer;
-  }
-  
-  export interface StructInstance<StructType> {
-    fromBuffer: (buffer: Buffer) => StructType & StructTypeInterface<StructType>;
-    toBuffer: (buffer: Buffer, object: StructType, index?: number) => Buffer;
-    fields: GenericMap<StructType>;
-    name: string;
+      toBuffer: (buffer: Buffer, value: ToBuffer, index?: number) => ToBufferReturn,
+      fromBuffer: (buffer: Buffer, index?: number) => FromBuffer,
+      ...args: Array<unknown>
+    );
+
+    id: number;
+    shortName: string;
     length: number;
-    fromJSON: (object: StructType) => StructType & StructTypeInterface<StructType>;
-    fromArgs: (...args: unknown[]) => StructType & StructTypeInterface<StructType>;
+    toBuffer: (buffer: Buffer, value: ToBuffer, index?: number) => ToBufferReturn;
+    fromBuffer: (buffer: Buffer, index?: number) => FromBuffer;
+    args: Array<unknown>;
+    defaultValue: FromBuffer;
+
+    get isAnalog(): boolean;
+    inspect(): string;
   }
-  export const DataTypes: {
-    noData: DataTypeConstructor;
-    data8: DataTypeConstructor;
-    data16: DataTypeConstructor;
-    data24: DataTypeConstructor;
-    data32: DataTypeConstructor;
-    data40: DataTypeConstructor;
-    data48: DataTypeConstructor;
-    data56: DataTypeConstructor;
-    data64: DataTypeConstructor;
-    bool: DataTypeConstructor;
-    map8: DataTypeFunctionConstructor;
-    map16: DataTypeFunctionConstructor;
-    map24: DataTypeFunctionConstructor;
-    map32: DataTypeFunctionConstructor;
-    map40: DataTypeFunctionConstructor;
-    map48: DataTypeFunctionConstructor;
-    map56: DataTypeFunctionConstructor;
-    map64: DataTypeFunctionConstructor;
-    uint8: DataTypeConstructor;
-    uint16: DataTypeConstructor;
-    uint24: DataTypeConstructor;
-    uint32: DataTypeConstructor;
-    uint40: DataTypeConstructor;
-    uint48: DataTypeConstructor;
-    int8: DataTypeConstructor;
-    int16: DataTypeConstructor;
-    int24: DataTypeConstructor;
-    int32: DataTypeConstructor;
-    int40: DataTypeConstructor;
-    int48: DataTypeConstructor;
-    enum8: DataTypeFunctionConstructor;
-    enum16: DataTypeFunctionConstructor;
-    enum32: DataTypeFunctionConstructor;
-    single: DataTypeConstructor;
-    double: DataTypeConstructor;
-    octstr: DataTypeConstructor;
-    string: DataTypeConstructor;
-    EUI48: DataTypeConstructor;
-    EUI64: DataTypeConstructor;
-    key128: DataTypeConstructor;
-    uint4: DataTypeConstructor;
-    enum4: DataTypeFunctionConstructor;
-    map4: DataTypeFunctionConstructor;
-    buffer: DataTypeConstructor;
-    buffer8: DataTypeConstructor;
-    buffer16: DataTypeConstructor;
-    Array0: DataTypeFunctionConstructor;
-    Array8: DataTypeFunctionConstructor;
-    FixedString: DataTypeFunctionConstructor;
+
+  const DataTypes: {
+    noData: DataType<any, { result:null, length: 0 }, null>
+
+    data8: DataType<number>;
+    data16: DataType<number>;
+    data24: DataType<number>;
+    data32: DataType<number>;
+    data40: DataType<Buffer>;
+    data48: DataType<Buffer>;
+    data56: DataType<Buffer>;
+    data64: DataType<Buffer>;
+
+    bool: DataType<boolean | null>;
+
+    map8: <Flags extends string | null>(...flags: Array<Flags>) => DataType<Bitmap<Flags>>;
+    map16: <Flags extends string | null>(...flags: Array<Flags>) => DataType<Bitmap<Flags>>;
+    map24: <Flags extends string | null>(...flags: Array<Flags>) => DataType<Bitmap<Flags>>;
+    map32: <Flags extends string | null>(...flags: Array<Flags>) => DataType<Bitmap<Flags>>;
+    map40: <Flags extends string | null>(...flags: Array<Flags>) => DataType<Bitmap<Flags>>;
+    map48: <Flags extends string | null>(...flags: Array<Flags>) => DataType<Bitmap<Flags>>;
+    map56: <Flags extends string | null>(...flags: Array<Flags>) => DataType<Bitmap<Flags>>;
+    map64: <Flags extends string | null>(...flags: Array<Flags>) => DataType<Bitmap<Flags>>;
+
+    uint8: DataType<number>;
+    uint16: DataType<number>;
+    uint24: DataType<number>;
+    uint32: DataType<number>;
+    uint40: DataType<number>;
+    uint48: DataType<number>;
+    // uint56: DataType<number>,
+    // uint64: DataType<number>,
+
+    int8: DataType<number>;
+    int16: DataType<number>;
+    int24: DataType<number>;
+    int32: DataType<number>;
+    int40: DataType<number>;
+    int48: DataType<number>;
+    // int56: DataType<number>,
+    // int64: DataType<number>,
+
+    enum8: <Flags extends string | number | undefined>(flags: Record<Flags, number>) => DataType<Exclude<Flags, undefined>, Flags>;
+    enum16: <Flags extends string | number | undefined>(flags: Record<Flags, number>) => DataType<Exclude<Flags, undefined>, Flags>;
+    enum32: <Flags extends string | number | undefined>(flags: Record<Flags, number>) => DataType<Exclude<Flags, undefined>, Flags>;
+
+    // semi: DataType<number>,
+    single: DataType<number>;
+    double: DataType<number>;
+
+    octstr: DataType<Buffer>;
+    string: DataType<string>;
+    // octstr16: DataType<string>,
+    // string16: DataType<string>,
+
+    // array
+    // struct
+    // set
+    // bag
+
+    // ToD
+    // date
+    // UTC
+
+    // clusterId
+    // attribId
+
+    // bacOID
+    EUI48: DataType<string>;
+    EUI64: DataType<string>;
+    key128: DataType<string>;
+
+    //* Internal Types *//
+    map4: <Flags extends string | null>(...flags: Array<Flags>) => DataType<Bitmap<Flags>>;
+    uint4: DataType<number>;
+    enum4: <Flags extends string | number | undefined>(flags: Record<Flags, number>) => DataType<Exclude<Flags, undefined>, Flags>;
+
+    buffer: DataType<Buffer>;
+    buffer8: DataType<Buffer>;
+    buffer16: DataType<Buffer>;
+
+    Array0: {
+      <T>(type: DataType<T>): DataType<Array<T>>;
+      // Overload to allow structs in arrays
+      <Defs extends Record<string, StructField>>(
+        type: StaticStruct<Defs>,
+      ): DataType<Array<StructProperties<Defs>>>;
+    };
+    Array8: {
+      <T>(type: DataType<T>): DataType<Array<T>>;
+      // Overload to allow structs in arrays
+      <Defs extends Record<string, StructField>>(
+        type: StaticStruct<Defs>,
+      ): DataType<Array<StructProperties<Defs>>>;
+    };
+    FixedString: (length: number) => DataType<string>;
   };
-  export const DataType: DataTypeInterface;
-  export function Struct<StructType>(
+
+  type Bitmap<Flags extends string | null> = BitmapBase<Flags> & {
+    [K in Flags as K extends string ? K : never]: boolean;
+  };
+
+  class BitmapBase<Flags extends string | null> {
+    _buffer: Buffer;
+    _fields: Array<Flags>;
+    setBit(index: number, value?: boolean): void;
+    getBit(index: number): boolean;
+    clearBit(index: number): void;
+    setBits(bits: number | Array<Flags>): void;
+    getBits(): Array<Flags>;
+    get length(): number;
+    static fromBuffer<Flags extends string | null>(
+      buffer: Buffer,
+      index: number,
+      length: number,
+      flags: Array<Flags>,
+    ): Bitmap<Flags>;
+    static toBuffer<Flags extends string | null>(
+      buffer: Buffer,
+      index: number,
+      length: number,
+      flags: Array<Flags>,
+      value: number,
+    ): number;
+    static toBuffer<Flags extends string | null>(
+      buffer: Buffer,
+      index: number,
+      length: number,
+      flags: Array<Flags> | undefined,
+      value: Bitmap<Flags>,
+    ): number;
+    toArray(): Array<Flags>;
+    toBuffer(buffer: Buffer, index: number): Buffer;
+    copy(): Bitmap<Flags>;
+    toJSON(): object;
+    inspect(): string;
+  }
+
+  type StructField = DataType<any, any, any> | StaticStruct<any>;
+
+  interface StaticStruct<Defs extends Record<string, StructField>> {
+    get fields(): Defs;
+    get name(): string;
+    get length(): number;
+    fromJSON(props: any): StructInstance<Defs>;
+    fromArgs(...args: Array<unknown>): StructInstance<Defs>;
+    fromBuffer(buffer: Buffer, index?: number, returnLength?: false): StructInstance<Defs>;
+    fromBuffer(
+      buffer: Buffer,
+      index?: number,
+      returnLength?: true,
+    ): {
+      result: StructInstance<Defs>;
+      length: number;
+    };
+    toBuffer(buffer?: Buffer, value?: StructProperties<Defs>, index?: number): number;
+  }
+
+  type StructProperties<Defs extends Record<string, StructField>> = {
+    [Property in keyof Defs]: Defs[Property] extends DataType<infer ToBuffer, infer FromBuffer, any>
+      ? FromBuffer
+      : Defs[Property] extends StaticStruct<infer InnerDefs extends Record<string, StructField>>
+        ? StructProperties<InnerDefs>
+        : never;
+  };
+
+  type StructInstance<Defs extends Record<string, StructField>> = StructProperties<Defs> & {
+    toJSON: () => StructProperties<Defs>;
+    toBuffer: (buffer?: Buffer, index?: number) => Buffer;
+  };
+
+  function Struct<Defs extends Record<string, StructField>>(
     name: string,
-    objectDefinition: GenericMap<StructType>
-  ): StructInstance<StructType>;
+    defs: Defs,
+    opts?: { encodeMissingFieldsBehavior?: "default" | "skip" },
+  ): StaticStruct<Defs>;
 }
 
 /*
 How to use @athombv/data-types in TypeScript:
 
-// Create a type that represents the Struct data
-type ZdoEndDeviceAnnounceIndication = {
-  srcAddr: number;
-  IEEEAddr: string;
-};
+// Create a Struct instance
+const ZdoEndDeviceAnnounceIndicationStruct = Struct("ZdoEndDeviceAnnounceIndication", {
+  srcAddr: DataTypes.uint16,
+  IEEEAddr: DataTypes.EUI64,
+});
 
-// Create a Struct instance with generic type ZdoEndDeviceAnnounceIndication
-const ZdoEndDeviceAnnounceIndicationStruct =
-  Struct<ZdoEndDeviceAnnounceIndication>("ZdoEndDeviceAnnounceIndication", {
-    srcAddr: DataTypes.uint16,
-    IEEEAddr: DataTypes.EUI64,
-  });
-
-// Create ZdoEndDeviceAnnounceIndication object
+// Create ZdoEndDeviceAnnounceIndication object from a buffer
 const ZdoEndDeviceAnnounceObject = ZdoEndDeviceAnnounceIndicationStruct.fromBuffer(
   Buffer.from([0, 1, 2, 3])
 );
 
-ZdoEndDeviceAnnounceObject.srcAddr.trim(); // This errors, srcAddr is not a string
+// @ts-expect-error srcAddr is not a string
+ZdoEndDeviceAnnounceObject.srcAddr.trim();
 
 // Create Buffer instance from ZdoEndDeviceAnnounceObject
-const ZdoEndDeviceAnnounceBuffer = ZdoEndDeviceAnnounceIndicationStruct.toBuffer({ srcAddr: 1, IEEAddr: 'abc' }); // This errors due to typo in IEEEAddr name
+const ZdoEndDeviceAnnounceBuffer = Buffer.alloc(8);
+// @ts-expect-error typo in IEEEAddr name
+ZdoEndDeviceAnnounceIndicationStruct.toBuffer(ZdoEndDeviceAnnounceBuffer, { srcAddr: 1, IEEAddr: 'abc' });
 
-Known limitations:
-- Structs in Structs are considered a no-go by these definitions.
-- DataTypes have no related JS type, so a few unknowns are used.
+const Item = Struct('Item', { a: DataTypes.uint8, b: DataTypes.uint8 });
+const ArrayOfItems = DataTypes.Array8(Item);
+
+Known limitation: Struct.fromArgs cannot be typed.
 */

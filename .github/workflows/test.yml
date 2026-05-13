@@ -49,3 +49,25 @@ jobs:
       # Finally run `npm test` (make sure you have defined a proper test command in package.json).
       - run: npm ci
       - run: npm test
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+
+    # This job validates the .d.ts declarations against test/types-test.ts which contains
+    # both positive assertions and @ts-expect-error directives. The job fails when:
+    #   - A @ts-expect-error becomes unused (types got too loose)
+    #   - A positive type assertion breaks (types got too strict or wrong)
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 20
+      - uses: webfactory/ssh-agent@v0.4.1
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+        if: env.SSH_KEY != null
+        with:
+          ssh-private-key: ${{ env.SSH_KEY }}
+      - run: npm ci
+      - run: npm run typecheck
