@@ -1,25 +1,32 @@
 name: Publish to NPM
 
-# Version: 2.0.3
-# Modified: No
-# Requirements:
-# - Ensure you've run `npm version major|minor|patch` on the `master` branch before merging to `production`.
+# Publishes the package to npmjs.org using OIDC (Trusted Publisher).
 #
-# This GitHub Workflow:
-# 1. [Optional] If `npm run build` exists. If so, it runs `npm ci` and `npm run build`.
-# 2. Publishes the package to the NPM registry.
+# Requirements:
+# - The `@athombv/data-types` package must have a Trusted Publisher
+#   configured on npmjs.org pointing at this repository and workflow file.
+# - Bump the version on `master` before merging to `production`.
 #
 # Secrets:
-# - HOMEY_GITHUB_ACTIONS_BOT_PERSONAL_ACCESS_TOKEN
-# - NPM_AUTH_TOKEN: required for publishing to npm
 # - SLACK_WEBHOOK_URL: required for posting a message in #software
+#
+# Steps:
+# 1. Verifies a `files` array is present in package.json.
+# 2. Installs dependencies and runs `npm run build` if it exists.
+# 3. On `workflow_dispatch`: runs `npm publish --dry-run`.
+# 4. On push to `production`: publishes to npmjs.org.
+# 5. On push to `testing`: publishes with `beta` tag.
 
-# Note: when publishing a scoped npm package (e.g. @athombv/node-my-package),
-# add "publishConfig": { "access": "public" } to your package.json.
 on:
+  workflow_dispatch:
   push:
     branches:
       - production
+      - testing
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   publish:
@@ -27,14 +34,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout git repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # Setup
-      - name: Set up node 16 environment
-        uses: actions/setup-node@v3
+      - name: Set up node
+        uses: actions/setup-node@v4
         with:
-          node-version: 16
-          registry-url: 'https://npm.pkg.github.com'
+          # Node 24 bundles npm >= 11.5.1, required for OIDC `npm publish`.
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
 
       # Sets package.json name & version to environment.
       - name: Get Package Info
@@ -45,50 +52,40 @@ jobs:
           VERSION="$(node -p "require('./package.json').version")"
           echo package_version=${VERSION} >> $GITHUB_ENV
 
-      # Ensure `packake.json .files` exists.
-      - name: Verify
+      - name: Verify files field in package.json
         run: |
-          if ! cat package.json | jq -e .files; then
-            echo "Missing 'files' array in package.json."
+          if ! jq -e '(.files | type == "array") and (.files | length > 0)' package.json > /dev/null; then
+            echo "package.json must declare a non-empty 'files' array."
             exit 1
           fi
 
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --audit=false
 
-      # Run `npm ci && npm run build` if it exists.
       - name: Build
         run: |
-          if jq --exit-status '.scripts | has("build")' package.json; then
-            echo "'npm run build' does exist. Building..."
-            npm ci --ignore-scripts --audit=false
+          if jq --exit-status '(.scripts // {}) | has("build")' package.json > /dev/null; then
+            echo "Running npm run build..."
             npm run build
           else
-            echo "'npm run build' does not exist. Skipping build..."
+            echo "No build script; skipping."
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.HOMEY_GITHUB_ACTIONS_BOT_PERSONAL_ACCESS_TOKEN }}
 
-      # Configure NPM to use the NPM Registry
-      - name: Configure NPM
-        run: |
-          npm config set registry https://registry.npmjs.org
-          npm config set @athombv:registry https://registry.npmjs.org
-          npm config set //registry.npmjs.org/:_authToken=${{ secrets.NPM_AUTH_TOKEN }} -q
+      - name: Publish dry run
+        if: github.event_name == 'workflow_dispatch'
+        run: npm publish --dry-run --provenance
 
-      # Publish when this action is running on branch production.
       - name: Publish
-        if: github.ref == 'refs/heads/production'
-        run: |
-          npm publish
+        if: github.event_name == 'push' && github.ref == 'refs/heads/production'
+        run: npm publish --provenance
 
-      # Publish to beta when this action is running on branch testing.
       - name: Publish (beta)
-        if: github.ref == 'refs/heads/testing'
-        run: |
-          npm publish --tag beta
+        if: github.event_name == 'push' && github.ref == 'refs/heads/testing'
+        run: npm publish --provenance --tag beta
 
-       # Post a Slack notification on success/failure
+      # Post a Slack notification on success/failure
       - name: Slack notify
-        if: always()
+        if: always() && github.event_name == 'push'
         uses: innocarpe/actions-slack@v1
         with:
           status: ${{ job.status }}
