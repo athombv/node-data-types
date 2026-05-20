@@ -199,5 +199,17 @@ describe('Struct', function() {
         err => err instanceof TypeError && /^WeirdStruct: badKey is an unexpected property$/.test(err.message),
       );
     });
+
+    it('should report the actual subclass name in the error when subclassed', function() {
+      // Struct-generated classes can be subclassed; the error message should
+      // identify the actual class being instantiated, not the underlying
+      // Struct name. This is what `new.target.name` gives us.
+      const Base = Struct('BaseStruct', { a: DataTypes.uint8 });
+      class Extended extends Base {}
+      assert.throws(
+        () => new Extended({ unexpected: 1 }),
+        err => err instanceof TypeError && /^Extended: unexpected is an unexpected property$/.test(err.message),
+      );
+    });
   });
 });
