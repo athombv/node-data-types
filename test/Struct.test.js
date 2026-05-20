@@ -185,5 +185,19 @@ describe('Struct', function() {
         /unexpected property/,
       );
     });
+
+    it('should produce a stable error message even when a `constructor` field is declared', function() {
+      // Edge case: if a struct legitimately declares a `constructor` field
+      // and the caller sets it before an unexpected key is seen, the throw
+      // path must not depend on `this.constructor.name`.
+      const Weird = Struct('WeirdStruct', {
+        constructor: DataTypes.uint8,
+        a: DataTypes.uint8,
+      });
+      assert.throws(
+        () => new Weird({ constructor: 1, badKey: 2 }),
+        err => err instanceof TypeError && /^WeirdStruct: badKey is an unexpected property$/.test(err.message),
+      );
+    });
   });
 });
