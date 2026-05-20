@@ -41,7 +41,7 @@ jobs:
         with:
           # Node 24 bundles npm >= 11.5.1, required for OIDC `npm publish`.
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org/'
+          registry-url: 'https://registry.npmjs.org'
 
       # Sets package.json name & version to environment.
       - name: Get Package Info
@@ -54,8 +54,8 @@ jobs:
 
       - name: Verify files field in package.json
         run: |
-          if ! jq -e .files package.json > /dev/null; then
-            echo "Missing 'files' array in package.json."
+          if ! jq -e '(.files | type == "array") and (.files | length > 0)' package.json > /dev/null; then
+            echo "package.json must declare a non-empty 'files' array."
             exit 1
           fi
 
@@ -64,7 +64,7 @@ jobs:
 
       - name: Build
         run: |
-          if jq --exit-status '.scripts | has("build")' package.json > /dev/null; then
+          if jq --exit-status '(.scripts // {}) | has("build")' package.json > /dev/null; then
             echo "Running npm run build..."
             npm run build
           else
