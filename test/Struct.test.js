@@ -152,4 +152,38 @@ describe('Struct', function() {
     assert(refData.field6.bit9);
     assert.deepEqual(refData.field6.toArray(), ['bit2', 'bit9']);
   });
+
+  describe('prototype-chain property guard', function() {
+    let S;
+    before(function() {
+      S = Struct('GuardedStruct', { a: DataTypes.uint8 });
+    });
+
+    it('should reject `constructor` as a field name', function() {
+      assert.throws(
+        () => new S({ constructor: 'attacker-controlled' }),
+        /unexpected property/,
+        'constructor is on Object.prototype, not an own property of defs',
+      );
+    });
+
+    it('should reject `toString` as a field name', function() {
+      assert.throws(
+        () => new S({ toString: () => 'pwned' }),
+        /unexpected property/,
+      );
+    });
+
+    it('should still accept declared own-property field names', function() {
+      const instance = new S({ a: 42 });
+      assert.strictEqual(instance.a, 42);
+    });
+
+    it('should still reject undeclared field names', function() {
+      assert.throws(
+        () => new S({ b: 1 }),
+        /unexpected property/,
+      );
+    });
+  });
 });

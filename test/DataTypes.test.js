@@ -26,5 +26,23 @@ describe('DataType', function() {
       testMap.constructor.toBuffer(buffer, bufferOffset, testMap.length, bits, testMap);
       assert.deepEqual(buffer, expectedBuffer, 'Static toBuffer failed');
     });
+
+    describe('source buffer aliasing', function() {
+      it('should not share memory with the source buffer after fromBuffer', function() {
+        const source = Buffer.from([0xff]);
+        const map = DataTypes.map8('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h')
+          .fromBuffer(source, 0);
+
+        // Snapshot bits, mutate source, read again. If the Bitmap aliases
+        // source memory, the second read observes the mutation.
+        const bitsBefore = map.getBits();
+        source[0] = 0x00;
+        const bitsAfter = map.getBits();
+
+        assert.deepEqual(bitsBefore, bitsAfter,
+          'Bitmap must own its bytes; mutating source must not affect parsed value');
+        assert.deepEqual(bitsAfter, ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']);
+      });
+    });
   });
 });
