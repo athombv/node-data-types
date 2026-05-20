@@ -152,4 +152,64 @@ describe('Struct', function() {
     assert(refData.field6.bit9);
     assert.deepEqual(refData.field6.toArray(), ['bit2', 'bit9']);
   });
+
+  describe('prototype-chain property guard', function() {
+    let S;
+    before(function() {
+      S = Struct('GuardedStruct', { a: DataTypes.uint8 });
+    });
+
+    it('should reject `constructor` as a field name', function() {
+      assert.throws(
+        () => new S({ constructor: 'attacker-controlled' }),
+        /unexpected property/,
+        'constructor is on Object.prototype, not an own property of defs',
+      );
+    });
+
+    it('should reject `toString` as a field name', function() {
+      assert.throws(
+        () => new S({ toString: () => 'pwned' }),
+        /unexpected property/,
+      );
+    });
+
+    it('should still accept declared own-property field names', function() {
+      const instance = new S({ a: 42 });
+      assert.strictEqual(instance.a, 42);
+    });
+
+    it('should still reject undeclared field names', function() {
+      assert.throws(
+        () => new S({ b: 1 }),
+        /unexpected property/,
+      );
+    });
+
+    it('should produce a stable error message even when a `constructor` field is declared', function() {
+      // Edge case: if a struct legitimately declares a `constructor` field
+      // and the caller sets it before an unexpected key is seen, the throw
+      // path must not depend on `this.constructor.name`.
+      const Weird = Struct('WeirdStruct', {
+        constructor: DataTypes.uint8,
+        a: DataTypes.uint8,
+      });
+      assert.throws(
+        () => new Weird({ constructor: 1, badKey: 2 }),
+        err => err instanceof TypeError && /^WeirdStruct: badKey is an unexpected property$/.test(err.message),
+      );
+    });
+
+    it('should report the actual subclass name in the error when subclassed', function() {
+      // Struct-generated classes can be subclassed; the error message should
+      // identify the actual class being instantiated, not the underlying
+      // Struct name. This is what `new.target.name` gives us.
+      const Base = Struct('BaseStruct', { a: DataTypes.uint8 });
+      class Extended extends Base {}
+      assert.throws(
+        () => new Extended({ unexpected: 1 }),
+        err => err instanceof TypeError && /^Extended: unexpected is an unexpected property$/.test(err.message),
+      );
+    });
+  });
 });
