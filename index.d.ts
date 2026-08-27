@@ -82,7 +82,7 @@ declare module "@athombv/data-types" {
 
     // ToD
     // date
-    // UTC
+    UTC: DataType<number>;
 
     // clusterId
     // attribId
