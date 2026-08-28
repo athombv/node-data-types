@@ -42,6 +42,7 @@ const ints = Struct("Ints", {
   i8: DataTypes.int8,
   i32: DataTypes.int32,
   u4: DataTypes.uint4,
+  utc: DataTypes.UTC,
   sng: DataTypes.single,
   dbl: DataTypes.double,
 }).fromBuffer(emptyBuf());
@@ -51,6 +52,7 @@ const _intU32: number = ints.u32;
 const _intI8: number = ints.i8;
 const _intI32: number = ints.i32;
 const _intU4: number = ints.u4;
+const _intUtc: number = ints.utc;
 const _intSng: number = ints.sng;
 const _intDbl: number = ints.dbl;
 
